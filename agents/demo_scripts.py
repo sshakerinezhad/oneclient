@@ -49,10 +49,21 @@ RETURN count(c) AS total_cm_clients
         ),
     ],
     nudge=(
-        "The top 10 are exclusive Capital Markets clients with zero other LOB "
-        "relationships — pure CM-only. Revenue ranges from ~$21M to ~$84M. "
-        "These represent significant single-LOB concentration risk and cross-sell "
-        "opportunities for CB and Wealth."
+        "10 exclusive Capital Markets clients in US West with zero other LOB "
+        "relationships — pure CM-only, ranked by revenue:\n\n"
+        "1. Pacific Ridge Capital — $83.7M\n"
+        "2. Cascade Ventures Ltd — $76.4M\n"
+        "3. Sierra West Holdings — $71.2M\n"
+        "4. Redwood Financial Group — $65.8M\n"
+        "5. Golden State Partners — $59.3M\n"
+        "6. Olympic Resources Inc — $52.6M\n"
+        "7. Columbia Basin Energy — $44.1M\n"
+        "8. Desert Sun Enterprises — $37.8M\n"
+        "9. Evergreen Pacific Corp — $28.5M\n"
+        "10. Summit Peak Industries — $21.3M\n\n"
+        "All 10 have only a CM relationship — no CB, no Wealth, no P&BB. "
+        "This single-LOB concentration represents both risk (revenue dependency) "
+        "and opportunity (cross-sell into CB and Wealth)."
     ),
 )
 
@@ -169,10 +180,21 @@ ORDER BY client_count DESC
         ),
     ],
     nudge=(
-        "8 clients found across all three target industries (franchisee, auto "
-        "dealer, equipment). All have CB but lack Wealth — a natural cross-sell "
-        "segment. Revenues range from ~$7M to ~$28M with strong lending ratios "
-        "suggesting active commercial banking engagement."
+        "8 CB clients in US Midwest across all three target industries, none "
+        "with Wealth relationships:\n\n"
+        "Franchisees:\n"
+        "- Heartland Franchise Group — $27.8M\n"
+        "- Corn Belt Franchise Corp — $18.6M\n"
+        "- Lakeside Franchise Holdings — $9.8M\n\n"
+        "Auto Dealers:\n"
+        "- Prairie Auto Center — $24.1M\n"
+        "- Gateway Auto Partners — $15.4M\n"
+        "- Flatlands Auto Dealers — $7.2M\n\n"
+        "Equipment:\n"
+        "- Great Lakes Equipment Inc — $21.3M\n"
+        "- Midwest Equipment Solutions — $12.7M\n\n"
+        "All have active Commercial Banking relationships but zero Wealth "
+        "engagement — a natural cross-sell segment for Wealth Management."
     ),
 )
 
@@ -195,29 +217,38 @@ WHERE EXISTS {
 }
 WITH c, lobs, count(p) AS pbb_employee_count
 RETURN c.ecif_id AS ecif_id, c.name AS name, c.employee_count AS employee_count,
-       pbb_employee_count, lobs
+       c.revenue AS revenue, c.region AS region, pbb_employee_count, lobs
 ORDER BY pbb_employee_count DESC
 """,
             {},
         ),
         (
-            "Get employee count and revenue details for these large clients",
+            "Get executive leadership for these bank-at-work candidates",
             """
 MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness)
 WHERE l.name IN ['CB', 'CM'] AND c.employee_count > 5000
 WITH c, collect(DISTINCT l.name) AS lobs
-RETURN c.ecif_id AS ecif_id, c.name AS name, c.employee_count AS employee_count,
-       c.revenue AS revenue, lobs
-ORDER BY c.employee_count DESC
+MATCH (exec:Person)-[e:EXECUTIVE_OF]->(c)
+RETURN c.name AS company, exec.name AS executive_name, e.title AS title
+ORDER BY c.employee_count DESC, e.title
 """,
             {},
         ),
     ],
     nudge=(
-        "3 large companies identified with significant P&BB employee penetration "
-        "(25+ employees each already banking with BMO). Continental Staffing "
-        "Solutions leads with ~12,800 employees. These are strong bank-at-work "
-        "candidates where employee financial services can be expanded."
+        "3 large companies identified as strong bank-at-work candidates:\n\n"
+        "1. Continental Staffing Solutions — $247M revenue, 12,847 employees, "
+        "25 already hold P&BB accounts. Leadership: Sarah Mitchell (CEO), "
+        "Robert Chen (CFO). Located in US South.\n\n"
+        "2. National Services Group — $190M revenue, 9,234 employees, "
+        "25 P&BB-holding employees. Leadership: James Kowalski (CEO), "
+        "Linda Torres (CFO). Located in US South.\n\n"
+        "3. Allied Workforce Corp — $134M revenue, 7,612 employees, "
+        "25 P&BB-holding employees. Leadership: David Park (CEO), "
+        "Maria Santos (CFO). Located in US South.\n\n"
+        "All three hold both CB and CM relationships. The high P&BB employee "
+        "count signals existing personal banking engagement — strong foundation "
+        "for expanding bank-at-work programs across the full employee base."
     ),
 )
 
@@ -239,34 +270,44 @@ WITH c, lobs, count(p) AS employee_links
 WHERE employee_links > 10
   AND NOT ('Wealth' IN lobs AND 'CB' IN lobs AND 'CM' IN lobs)
 RETURN c.ecif_id AS ecif_id, c.name AS name, lobs, employee_links, c.revenue AS revenue,
-       c.employee_count AS employee_count
+       c.employee_count AS employee_count, c.region AS region
 ORDER BY employee_links DESC, c.revenue DESC
 LIMIT 5
 """,
             {},
         ),
         (
-            "Get detailed LOB breakdown and employee links for the top "
-            "underpenetrated opportunity",
+            "Get executive leadership and LOB details for Dominion Infrastructure Partners",
             """
 MATCH (c:Company {name: 'Dominion Infrastructure Partners'})-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness)
 WITH c, collect(l.name) AS current_lobs
+MATCH (exec:Person)-[e:EXECUTIVE_OF]->(c)
+WITH c, current_lobs, collect({name: exec.name, title: e.title}) AS executives
 OPTIONAL MATCH (p:Person)-[:EMPLOYED_BY]->(c)
-WITH c, current_lobs, count(p) AS employee_links
-OPTIONAL MATCH (exec:Person)-[:EXECUTIVE_OF]->(c)
+WHERE EXISTS {
+  MATCH (p)-[:PERSON_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'P&BB'})
+}
 RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue,
-       c.employee_count AS employee_count,
-       current_lobs, employee_links, count(exec) AS executive_count
+       c.employee_count AS employee_count, c.region AS region,
+       current_lobs, executives, count(p) AS pbb_employee_count
 """,
             {},
         ),
     ],
     nudge=(
-        "Dominion Infrastructure Partners is the standout — $184M revenue, "
-        "14,800+ employees, CB + CM relationships, 30 P&BB-holding employees, "
-        "3 executives, but NO Wealth relationship. This is the single best "
-        "underpenetrated opportunity in the portfolio given the depth of "
-        "existing cross-BMO engagement."
+        "Dominion Infrastructure Partners is the single best underpenetrated "
+        "opportunity in the portfolio:\n\n"
+        "- Revenue: $183.7M | Employees: 14,847 | Region: Ontario\n"
+        "- Current LOBs: Commercial Banking (CB) + Capital Markets (CM)\n"
+        "- MISSING: Wealth Management — despite deep existing engagement\n"
+        "- Executive team: Catherine Beaumont (CEO), François Lapointe (CFO), "
+        "Michelle Okafor (COO)\n"
+        "- 30 employees already hold Personal & Business Banking (P&BB) accounts "
+        "— strong signal of individual banking engagement\n\n"
+        "The combination of multi-LOB presence (CB + CM), large workforce with "
+        "existing P&BB penetration, senior executive relationships, and the "
+        "conspicuous absence of Wealth makes this the highest-priority cross-sell "
+        "target. Recommend Wealth Management outreach starting with the C-suite."
     ),
 )
 
