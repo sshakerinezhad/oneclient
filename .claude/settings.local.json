@@ -1,0 +1,32 @@
+{
+  "model": "claude-opus-4-6[1m]",
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:mikhail.io)",
+      "Bash(curl:*)",
+      "WebFetch(domain:claude-plugins.dev)",
+      "Bash(where:*)",
+      "WebFetch(domain:docs.claude.com)",
+      "Bash(python -m json.tool:*)",
+      "Bash(python:*)",
+      "Bash(\"C:\\\\Users\\\\User\\\\.claude\\\\plugins\\\\cache\\\\claude-plugins-official\\\\explanatory-output-style\\\\2cd88e7947b7\\\\hooks-handlers\\\\session-start.cmd\")",
+      "Bash(gh repo view:*)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(git config:*)",
+      "Bash(dir:*)",
+      "Bash(for dir in \"C:/Users/User/Desktop/bardsong/mythos_backend/uploads\" \"C:/Users/User/Desktop/bardsong/mythos_backend/transcriptions\" \"C:/Users/User/Desktop/bardsong/mythos_backend/storyboards\")",
+      "Bash(do mkdir -p \"$dir\")",
+      "Bash(echo:*)",
+      "Bash(done)",
+      "Bash(pip:*)",
+      "Bash(npx tsc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)",
+      "PowerShell(git fetch *)",
+      "PowerShell(git log *)"
+    ]
+  }
+}
