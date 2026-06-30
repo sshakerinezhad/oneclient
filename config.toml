@@ -1,10 +1,20 @@
 [bedrock]
 region = "us-east-1"
-orchestrator_model_id = "us.anthropic.claude-opus-4-6-20260514-v1:0"
-query_model_id = "us.anthropic.claude-opus-4-6-20260514-v1:0"
-aws_access_key_id = ""
-aws_secret_access_key = ""
-aws_session_token = ""
+orchestrator_model_id = "us.anthropic.claude-opus-4-1-20250805-v1:0"
+query_model_id = "us.anthropic.claude-opus-4-1-20250805-v1:0"
+aws_access_key_id = "ASIAY35ETZP3SCA2LGUT"
+aws_secret_access_key = "QV799yUQjLPDORVsTmyc53XDfGRLI7etvdzzSoPk"
+aws_session_token = "1Q0Jb3JpZ2luX2VjEPb//|||||||//wEaDGNhLWNIbnRyYWwtMSJIMEYCIQC9YqGqmICJeZLXBvAB3Y4Kaux|1FwuDS3g3isp2SZAawlhA
+MtKMJUF91odj1v+st8Nbq6KRF7JtC1nw++j3HnEyVM9Kv4DCMD///||||///wEQABoMNjA5NjkzNzE1NDQ3lgzbT/bDH0rGmAJYjdA
+q0gPCkv6+94Z7guaNWB457BtGEyaneс39FuTsQ21IYGVZCXXzyZFr8X5LAWsHtNYXGYb7GCcOJnxek4cXIM9oSCZPaL9ılim/NSHigc+h9Sfb3PF
+CbQfUUBIbsNDCQU8/qnKknHQdESnBE8UA7MSXyciazM4uLO2BZKm/NZBmrP94G8md5J3AW8ZtXywBrqaY5ufl0BTZ3ZP/hWAyFw
+сnбUKXqVEaVu+E2znxzmHtb014xlq6EІКРХLgjdmSDfTpabaMnPZfrRn8r7Hn5AZEJ3k6TQ7JZfyZnKK519HKc3kJLVLLJxPmlv8aJndwj
+GJN6ipp+LjpEF5yOi31HjM4jWJMpC5Mo06hldKcoU2wX2Pum+kG6xynJFj9g1j6NQgg6zd8zV1jNSqkCpkGfi/jHkUziNq|PYOfHxTwY
+EmkCЗqklZ8KdAUZaBwLncnFSlIсqJAL8MLRIg2хPgLbOfX28oidVzrCam81ОcfYJо39gdmDxIсTА9ОWzylGbIbokjU+hgXPBV5cMdX9K
+scSTi+YpfOVqS8iuWho2T7p7CS+GKuyLiL1kcCvbFgW041WqlDhnrvEqYLIZfCe7dQXXrO8fz8ZWEjfEM1rsjGB6huhhL5pGdR3IMPjEjd
+ІGOqcВХАabЕNg4jNCiLЗ54p6+tdSZuSЗajwtCІJ20ZvvСКF/cе4FgRg9еgKxf/6ugOhQNqtvXOKJ4Ac2
++Pz+mНОk06dA7aujINхUХІЕFЕНys9wМХ6WDhBgbPKED4oqy5YpDrGm0UJuiFswDf0403Zlz911/k6TzkiBVot3Gf3YE50eXWXBSMk
+sTeyjQıFyJuХbUn+ghyDaqSyesp1QWsUWVwQoPu6vzvjxJog="
 aws_profile = ""
 
 [agent]
