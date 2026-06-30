@@ -75,18 +75,34 @@ def _q1_cm_only(fx: Fixtures) -> None:
 
     10 companies with CM and NO other LOB.  Revenue descending so top-10 rank
     is deterministic even after background population is merged.
+    Background cap is $10M; Q1 minimum is $21.3M — no background company can
+    displace a fixture in the LIMIT 10 result.
     """
-    names = [f"WestCM-{i:02d}" for i in range(1, 11)]
-    for i, name in enumerate(names, 1):
-        ecif_id = f"FX1-{i:03d}"
-        revenue = 450_000_000.0 - (i - 1) * 30_000_000.0
+    names = [
+        "Pacific Ridge Capital", "Cascade Ventures Ltd", "Sierra West Holdings",
+        "Redwood Financial Group", "Golden State Partners", "Olympic Resources Inc",
+        "Columbia Basin Energy", "Desert Sun Enterprises", "Evergreen Pacific Corp",
+        "Summit Peak Industries",
+    ]
+    revenues = [
+        83_700_000.0, 76_400_000.0, 71_200_000.0, 65_800_000.0, 59_300_000.0,
+        52_600_000.0, 44_100_000.0, 37_800_000.0, 28_500_000.0, 21_300_000.0,
+    ]
+    emp_counts = [4847, 3921, 3312, 2876, 2543, 2187, 1934, 1672, 1289, 847]
+    ni_ratios   = [0.09, 0.07, 0.11, 0.08, 0.10, 0.06, 0.09, 0.08, 0.07, 0.10]
+    lend_ratios = [0.18, 0.14, 0.20, 0.16, 0.13, 0.22, 0.17, 0.15, 0.19, 0.12]
+    dep_ratios  = [0.22, 0.19, 0.25, 0.17, 0.21, 0.28, 0.23, 0.16, 0.20, 0.24]
+
+    for i, name in enumerate(names):
+        ecif_id = f"FX1-{i + 1:03d}"
+        rev = revenues[i]
         fx.companies.append(Company(
             ecif_id=ecif_id, name=name, country="US", region="US West",
-            industry="manufacturing", employee_count=1000 + i * 100,
-            revenue=revenue, net_income=revenue * 0.08,
-            lending_balance=revenue * 0.15, deposit_balance=revenue * 0.20,
+            industry="manufacturing", employee_count=emp_counts[i],
+            revenue=rev, net_income=rev * ni_ratios[i],
+            lending_balance=rev * lend_ratios[i], deposit_balance=rev * dep_ratios[i],
         ))
-        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CM", revenue=revenue * 0.05))
+        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CM", revenue=rev * 0.05))
 
     EXPECTED[1] = {"region": "US West", "names": names}
 
@@ -94,20 +110,54 @@ def _q1_cm_only(fx: Fixtures) -> None:
 def _q2_cb_no_wealth(fx: Fixtures) -> None:
     """Q2: Top-20 CB clients without Wealth in US Northeast.
 
-    20 companies with CB only (no Wealth).  Revenue descending to give a
-    deterministic top-20 ranking.
+    20 companies with CB only (no Wealth).  Revenue descending.
+    Background cap is $10M; Q2 minimum is $14.2M — all 20 fixtures rank above
+    all background companies, so all 20 appear in the top-25 subset check.
     """
-    names = [f"NorthCB-{i:02d}" for i in range(1, 21)]
-    for i, name in enumerate(names, 1):
-        ecif_id = f"FX2-{i:03d}"
-        revenue = 200_000_000.0 - (i - 1) * 8_000_000.0
+    names = [
+        "Atlantic Seaboard Trading", "Harbor Point Financial", "Beacon Hill Associates",
+        "Liberty Square Capital", "Concord Bridge Partners", "Minuteman Industries",
+        "Pilgrim State Resources", "Lexington Commerce Group", "Bunker Hill Manufacturing",
+        "New England Merchant Corp", "Narragansett Bay Ventures", "Mystic River Holdings",
+        "Fenway Capital Partners", "Copley Square Advisors", "Cambridge Research Group",
+        "Quincy Market Associates", "Commonwealth Financial Corp", "Yankee Clipper Industries",
+        "Old North Trading Co", "Bay State Enterprises",
+    ]
+    revenues = [
+        117_400_000.0, 109_800_000.0, 102_300_000.0,  96_700_000.0,  89_400_000.0,
+         83_100_000.0,  77_600_000.0,  71_200_000.0,  65_400_000.0,  59_800_000.0,
+         54_300_000.0,  49_700_000.0,  44_100_000.0,  39_500_000.0,  35_200_000.0,
+         31_700_000.0,  27_400_000.0,  23_600_000.0,  18_900_000.0,  14_200_000.0,
+    ]
+    emp_counts = [
+        8312, 7641, 6894, 6243, 5817,
+        5321, 4876, 4312, 3891, 3456,
+        3012, 2678, 2341, 2087, 1834,
+        1567, 1289,  987,  734,  512,
+    ]
+    ni_ratios = [
+        0.08, 0.06, 0.09, 0.07, 0.10, 0.06, 0.08, 0.07, 0.09, 0.06,
+        0.08, 0.07, 0.06, 0.09, 0.08, 0.07, 0.06, 0.09, 0.08, 0.07,
+    ]
+    lend_ratios = [
+        0.14, 0.12, 0.16, 0.13, 0.15, 0.11, 0.14, 0.12, 0.16, 0.13,
+        0.15, 0.12, 0.14, 0.11, 0.13, 0.16, 0.12, 0.14, 0.11, 0.15,
+    ]
+    dep_ratios = [
+        0.20, 0.18, 0.22, 0.19, 0.21, 0.17, 0.20, 0.18, 0.22, 0.19,
+        0.21, 0.18, 0.20, 0.17, 0.19, 0.22, 0.18, 0.20, 0.17, 0.21,
+    ]
+
+    for i, name in enumerate(names):
+        ecif_id = f"FX2-{i + 1:03d}"
+        rev = revenues[i]
         fx.companies.append(Company(
             ecif_id=ecif_id, name=name, country="US", region="US Northeast",
-            industry="retail", employee_count=500 + i * 50,
-            revenue=revenue, net_income=revenue * 0.06,
-            lending_balance=revenue * 0.12, deposit_balance=revenue * 0.18,
+            industry="retail", employee_count=emp_counts[i],
+            revenue=rev, net_income=rev * ni_ratios[i],
+            lending_balance=rev * lend_ratios[i], deposit_balance=rev * dep_ratios[i],
         ))
-        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CB", revenue=revenue * 0.04))
+        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CB", revenue=rev * 0.04))
 
     EXPECTED[2] = {"region": "US Northeast", "names": names}
 
@@ -116,20 +166,30 @@ def _q3_penetration(fx: Fixtures) -> None:
     """Q3: Quebec must have the strongest CB∩Wealth penetration.
 
     5 anchor companies in Quebec each with CB and Wealth.  The background
-    population (Task 1.5) applies knobs.PENETRATION[Quebec]=0.70 to generate
-    the bulk; these fixtures ensure Quebec has visible signal even in isolation.
+    population applies knobs.PENETRATION[Quebec]=0.70 to generate the bulk;
+    these fixtures ensure Quebec has visible signal even in isolation.
     """
-    for i in range(1, 6):
-        ecif_id = f"FX3-{i:03d}"
-        revenue = 80_000_000.0 - i * 5_000_000.0
+    names = [
+        "Groupe Laurentien Inc", "Société Montréal Capital", "Québec Industriel Ltée",
+        "Fleuve Saint-Laurent Corp", "Alliance Capitale Québec",
+    ]
+    revenues   = [47_300_000.0, 41_800_000.0, 35_200_000.0, 28_700_000.0, 22_400_000.0]
+    emp_counts = [1847, 1523, 1234, 976, 712]
+    ni_ratios   = [0.08, 0.07, 0.09, 0.07, 0.08]
+    lend_ratios = [0.12, 0.14, 0.11, 0.13, 0.10]
+    dep_ratios  = [0.17, 0.15, 0.18, 0.16, 0.14]
+
+    for i, name in enumerate(names):
+        ecif_id = f"FX3-{i + 1:03d}"
+        rev = revenues[i]
         fx.companies.append(Company(
-            ecif_id=ecif_id, name=f"QuebecBMO-{i:02d}", country="CA", region="Quebec",
-            industry="manufacturing", employee_count=200 + i * 50,
-            revenue=revenue, net_income=revenue * 0.07,
-            lending_balance=revenue * 0.10, deposit_balance=revenue * 0.15,
+            ecif_id=ecif_id, name=name, country="CA", region="Quebec",
+            industry="manufacturing", employee_count=emp_counts[i],
+            revenue=rev, net_income=rev * ni_ratios[i],
+            lending_balance=rev * lend_ratios[i], deposit_balance=rev * dep_ratios[i],
         ))
-        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CB", revenue=revenue * 0.03))
-        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="Wealth", revenue=revenue * 0.02))
+        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CB", revenue=rev * 0.03))
+        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="Wealth", revenue=rev * 0.02))
 
     EXPECTED[3] = {"winner": "Quebec"}
 
@@ -138,25 +198,36 @@ def _q4_midwest(fx: Fixtures) -> None:
     """Q4: Franchisee/auto_dealer/equipment CB clients without Wealth in US Midwest.
 
     8 companies covering all three INDUSTRIES_OF_INTEREST, each with CB and
-    no Wealth relationship.
+    no Wealth relationship.  Query has no LIMIT and test uses subset check, so
+    Q4 fixtures appear in results regardless of background company revenues.
     """
-    # Cycle through the three target industries so each appears at least twice.
     industries = [
         "franchisee", "auto_dealer", "equipment",
         "franchisee", "auto_dealer", "equipment",
         "franchisee", "auto_dealer",
     ]
-    names = [f"MidwestInd-{i:02d}" for i in range(1, 9)]
-    for i, (name, industry) in enumerate(zip(names, industries), 1):
-        ecif_id = f"FX4-{i:03d}"
-        revenue = 50_000_000.0 - i * 2_000_000.0
+    names = [
+        "Heartland Franchise Group", "Prairie Auto Center", "Great Lakes Equipment Inc",
+        "Corn Belt Franchise Corp", "Gateway Auto Partners", "Midwest Equipment Solutions",
+        "Lakeside Franchise Holdings", "Flatlands Auto Dealers",
+    ]
+    revenues   = [27_800_000.0, 24_100_000.0, 21_300_000.0, 18_600_000.0,
+                  15_400_000.0, 12_700_000.0,  9_800_000.0,  7_200_000.0]
+    emp_counts = [1234, 1087, 934, 812, 687, 543, 421, 312]
+    ni_ratios   = [0.06, 0.07, 0.05, 0.07, 0.06, 0.05, 0.07, 0.06]
+    lend_ratios = [0.22, 0.20, 0.24, 0.19, 0.21, 0.23, 0.20, 0.22]
+    dep_ratios  = [0.12, 0.10, 0.14, 0.11, 0.13, 0.10, 0.12, 0.11]
+
+    for i, (name, industry) in enumerate(zip(names, industries)):
+        ecif_id = f"FX4-{i + 1:03d}"
+        rev = revenues[i]
         fx.companies.append(Company(
             ecif_id=ecif_id, name=name, country="US", region="US Midwest",
-            industry=industry, employee_count=150 + i * 30,
-            revenue=revenue, net_income=revenue * 0.05,
-            lending_balance=revenue * 0.20, deposit_balance=revenue * 0.10,
+            industry=industry, employee_count=emp_counts[i],
+            revenue=rev, net_income=rev * ni_ratios[i],
+            lending_balance=rev * lend_ratios[i], deposit_balance=rev * dep_ratios[i],
         ))
-        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CB", revenue=revenue * 0.04))
+        fx.rel_company_lob.append(RelLob(src=ecif_id, lob="CB", revenue=rev * 0.04))
 
     EXPECTED[4] = {
         "region": "US Midwest",
@@ -171,27 +242,42 @@ def _q5_bank_at_work(fx: Fixtures) -> None:
     3 companies each with employee_count > 5000.  Each has 2 executives and
     25 individual employees who hold P&BB relationships via rel_person_lob.
     """
-    company_names = ["BigCorp-01", "BigCorp-02", "BigCorp-03"]
+    company_names = [
+        "Continental Staffing Solutions",
+        "National Services Group",
+        "Allied Workforce Corp",
+    ]
+    exec_names = [
+        ("Sarah Mitchell", "Robert Chen"),
+        ("James Kowalski", "Linda Torres"),
+        ("David Park", "Maria Santos"),
+    ]
+    revenues   = [247_300_000.0, 189_600_000.0, 134_200_000.0]
+    emp_counts = [12847, 9234, 7612]
+    ni_ratios   = [0.10, 0.09, 0.08]
+    lend_ratios = [0.26, 0.24, 0.22]
+    dep_ratios  = [0.31, 0.29, 0.27]
+
     person_counter = 1
 
-    for j, cname in enumerate(company_names, 1):
-        c_ecif = f"FX5-{j:03d}"
-        revenue = 300_000_000.0 - j * 20_000_000.0
+    for j, cname in enumerate(company_names):
+        c_ecif = f"FX5-{j + 1:03d}"
+        rev = revenues[j]
         fx.companies.append(Company(
             ecif_id=c_ecif, name=cname, country="US", region="US South",
-            industry="healthcare", employee_count=8000 + j * 1000,
-            revenue=revenue, net_income=revenue * 0.09,
-            lending_balance=revenue * 0.25, deposit_balance=revenue * 0.30,
+            industry="healthcare", employee_count=emp_counts[j],
+            revenue=rev, net_income=rev * ni_ratios[j],
+            lending_balance=rev * lend_ratios[j], deposit_balance=rev * dep_ratios[j],
         ))
-        fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CB", revenue=revenue * 0.05))
-        fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CM", revenue=revenue * 0.03))
+        fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CB", revenue=rev * 0.05))
+        fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CM", revenue=rev * 0.03))
 
         # 2 executives per company
-        for k, title in enumerate(["CEO", "CFO"], 1):
+        for title, exec_name in zip(["CEO", "CFO"], exec_names[j]):
             p_ecif = f"FX5P-{person_counter:03d}"
             person_counter += 1
             fx.persons.append(Person(
-                ecif_id=p_ecif, name=f"{cname}-{title}",
+                ecif_id=p_ecif, name=exec_name,
                 country="US", region="US South", customer_type="executive",
             ))
             fx.executive_of.append(Edge(src=p_ecif, dst=c_ecif, title=title))
@@ -219,19 +305,21 @@ def _q6_underpenetrated(fx: Fixtures) -> None:
     """
     c_ecif = "FX6-001"
     fx.companies.append(Company(
-        ecif_id=c_ecif, name="MegaGroup Holdings", country="CA", region="Ontario",
-        industry="manufacturing", employee_count=15_000,
-        revenue=450_000_000.0, net_income=50_000_000.0, rwa=200_000_000.0, roe=0.18,
-        lending_balance=120_000_000.0, deposit_balance=90_000_000.0,
+        ecif_id=c_ecif, name="Dominion Infrastructure Partners",
+        country="CA", region="Ontario",
+        industry="manufacturing", employee_count=14_847,
+        revenue=183_700_000.0, net_income=20_200_000.0, rwa=119_400_000.0, roe=0.17,
+        lending_balance=64_300_000.0, deposit_balance=51_400_000.0,
     ))
-    fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CB", revenue=18_000_000.0))
-    fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CM", revenue=12_000_000.0))
+    fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CB", revenue=13_200_000.0))
+    fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CM", revenue=9_400_000.0))
 
     # 3 executives
-    for k, title in enumerate(["CEO", "CFO", "COO"], 1):
+    exec_names = ["Catherine Beaumont", "François Lapointe", "Michelle Okafor"]
+    for k, (title, exec_name) in enumerate(zip(["CEO", "CFO", "COO"], exec_names), 1):
         p_ecif = f"FX6P-{k:03d}"
         fx.persons.append(Person(
-            ecif_id=p_ecif, name=f"MegaGroup-{title}",
+            ecif_id=p_ecif, name=exec_name,
             country="CA", region="Ontario", customer_type="executive",
         ))
         fx.executive_of.append(Edge(src=p_ecif, dst=c_ecif, title=title))
@@ -240,13 +328,13 @@ def _q6_underpenetrated(fx: Fixtures) -> None:
     for i in range(1, 31):
         p_ecif = f"FX6P-{i + 3:03d}"
         fx.persons.append(Person(
-            ecif_id=p_ecif, name=f"MegaEmployee-{i:03d}",
+            ecif_id=p_ecif, name=f"Employee-{p_ecif}",
             country="CA", region="Ontario", customer_type="individual",
         ))
         fx.rel_person_lob.append(RelLob(src=p_ecif, lob="P&BB", revenue=6_000.0))
         fx.employed_by.append(Edge(src=p_ecif, dst=c_ecif))
 
-    EXPECTED[6] = {"name": "MegaGroup Holdings", "missing_lob": "Wealth"}
+    EXPECTED[6] = {"name": "Dominion Infrastructure Partners", "missing_lob": "Wealth"}
 
 
 # ---------------------------------------------------------------------------

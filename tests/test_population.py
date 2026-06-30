@@ -57,7 +57,17 @@ def test_background_revenue_capped():
     fx = build_fixtures()
     build_population(fx)
     bg = [c for c in fx.companies if c.ecif_id.startswith("BG")]
-    assert all(c.revenue <= 50_000_000 for c in bg), "Background revenue must be capped at $50M"
+    assert all(c.revenue <= 10_000_000 for c in bg), "Background revenue must be capped at $10M"
+
+
+def test_all_company_names_unique():
+    fx = build_fixtures()
+    build_population(fx)
+    names = [c.name for c in fx.companies]
+    assert len(names) == len(set(names)), (
+        f"Duplicate company names found: "
+        f"{[n for n in names if names.count(n) > 1]}"
+    )
 
 
 def test_background_employee_count_capped():
