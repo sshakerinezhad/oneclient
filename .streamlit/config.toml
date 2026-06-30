@@ -1,9 +1,6 @@
-# Pin a light theme so the app never inherits the browser's dark mode
-# (which rendered markdown code/inline-code light-on-dark). Colors match
-# the BMO palette already defined in app/assets/bmo.css.
 [theme]
 base = "light"
 primaryColor = "#0079C1"
 backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F5F7FA"
-textColor = "#1A1A2E"
+secondaryBackgroundColor = "#F9FAFB"
+textColor = "#111827"

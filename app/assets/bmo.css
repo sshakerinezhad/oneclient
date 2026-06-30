@@ -1,269 +1,378 @@
-/* BMO Wealth Management — OneClient Intelligence
-   Flat design, system fonts, BMO palette. */
+/* OneClient Intelligence — Chat UI
+   Apple / Anthropic-inspired design system. */
 
 :root {
-    --bmo-blue: #0079C1;
-    --bmo-dark-blue: #006DAD;
-    --bmo-red: #ED1D24;
-    --bg-white: #FFFFFF;
-    --bg-canvas: #F5F7FA;
-    --text-primary: #1A1A2E;
-    --text-secondary: #5A6A7A;
-    --border-light: #E2E8F0;
-    --font-heading: "Segoe UI Semibold", "SF Pro Display", system-ui, sans-serif;
-    --font-body: "Segoe UI", "SF Pro Text", system-ui, sans-serif;
-    --font-mono: "Cascadia Code", "SF Mono", "Consolas", monospace;
+    --accent: #0079C1;
+    --accent-hover: #006099;
+    --accent-subtle: rgba(0, 121, 193, 0.08);
+
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F9FAFB;
+    --bg-tertiary: #F3F4F6;
+
+    --text-primary: #111827;
+    --text-secondary: #6B7280;
+    --text-tertiary: #9CA3AF;
+
+    --border: #E5E7EB;
+    --border-subtle: #F3F4F6;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+
+    --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+    --font-mono: "SF Mono", "Cascadia Code", "Consolas", monospace;
+
+    --transition: 200ms ease;
 }
 
-/* ── Hide Streamlit chrome ──────────────────────────────────────────── */
+/* ── Hide Streamlit chrome ─────────────────────────────────────────── */
 
-#MainMenu {visibility: hidden;}
-footer {visibility: hidden;}
-header {visibility: hidden;}
-
-.block-container {
-    padding-top: 0 !important;
-    max-width: 1200px;
-    margin: 0 auto;
+#MainMenu, footer, header[data-testid="stHeader"] {
+    visibility: hidden;
+    height: 0;
 }
 
-/* ── BMO Header ─────────────────────────────────────────────────────── */
-
-.bmo-header {
-    display: flex;
-    align-items: center;
-    padding: 16px 32px;
-    background: var(--bg-white);
-    border-bottom: 2px solid var(--bmo-blue);
-    margin: -1rem -1rem 24px -1rem;
-}
-
-.bmo-header img {
-    height: 40px;
-    margin-right: 24px;
-}
-
-.bmo-header h1 {
-    font-family: var(--font-heading);
-    font-size: 28px;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
-    margin: 0;
-    padding: 0;
-    line-height: 1.2;
-}
-
-/* ── Graph Canvas ───────────────────────────────────────────────────── */
-
-.graph-canvas {
-    background: var(--bg-canvas);
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    min-height: 150px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 24px;
-}
-
-.graph-empty {
-    color: var(--text-secondary);
-    font-family: var(--font-body);
-    font-size: 15px;
-    text-align: center;
-    padding: 32px;
-}
-
-.graph-loading {
-    color: var(--bmo-blue);
-    font-family: var(--font-body);
-    font-size: 15px;
-    text-align: center;
-    padding: 32px;
-}
-
-/* ── Question Chips ─────────────────────────────────────────────────── */
-
-/* Chip rows: horizontal blocks that do NOT contain a text input */
-div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) {
-    margin-bottom: 8px !important;
-}
-
-div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button {
-    border: 1.5px solid var(--bmo-blue) !important;
-    border-radius: 8px !important;
-    color: var(--bmo-blue) !important;
-    background: var(--bg-white) !important;
-    font-family: var(--font-body) !important;
-    font-size: 13px !important;
-    padding: 12px 16px !important;
-    cursor: pointer !important;
-    transition: all 150ms ease !important;
-    text-align: left !important;
-    width: 100% !important;
-    white-space: normal !important;
-    height: auto !important;
-    min-height: 60px !important;
-    line-height: 1.4 !important;
-    box-shadow: none !important;
-}
-
-div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button:hover {
-    background: var(--bmo-blue) !important;
-    color: var(--bg-white) !important;
-    box-shadow: 0 2px 8px rgba(0, 121, 193, 0.25) !important;
-}
-
-div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button:disabled {
-    border-color: var(--border-light) !important;
-    color: var(--text-secondary) !important;
-    background: var(--bg-canvas) !important;
-    cursor: not-allowed !important;
-    opacity: 0.6 !important;
-}
-
-div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button:disabled:hover {
-    background: var(--bg-canvas) !important;
-    color: var(--text-secondary) !important;
-    box-shadow: none !important;
-}
-
-/* ── Ask button (in the row that HAS a text input) ─────────────────── */
-
-div[data-testid="stHorizontalBlock"]:has(div[data-testid="stTextInput"]) {
-    margin-bottom: 16px !important;
-}
-
-div[data-testid="stHorizontalBlock"]:has(div[data-testid="stTextInput"]) .stButton > button {
-    background: var(--bmo-blue) !important;
-    color: var(--bg-white) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-family: var(--font-body) !important;
-    font-size: 15px !important;
-    font-weight: 600 !important;
-    padding: 10px 32px !important;
-    min-height: unset !important;
-    text-align: center !important;
-    height: auto !important;
-    box-shadow: none !important;
-    cursor: pointer !important;
-    transition: all 150ms ease !important;
-}
-
-div[data-testid="stHorizontalBlock"]:has(div[data-testid="stTextInput"]) .stButton > button:hover {
-    background: var(--bmo-dark-blue) !important;
-    box-shadow: 0 2px 8px rgba(0, 121, 193, 0.25) !important;
-}
-
-/* ── Investigation Trace (st.status override) ───────────────────────── */
-
-div[data-testid="stStatusWidget"] {
-    border-left: 3px solid var(--bmo-blue) !important;
-    border-radius: 0 4px 4px 0 !important;
-    background: var(--bg-white) !important;
-    margin: 16px 0 !important;
-}
-
-div[data-testid="stStatusWidget"] summary {
-    font-family: var(--font-body) !important;
-    color: var(--text-primary) !important;
-}
-
-/* ── Answer Card (st.container with border) ─────────────────────────── */
-
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background: var(--bg-white) !important;
-    border: none !important;
-    border-left: 3px solid var(--bmo-blue) !important;
-    border-radius: 0 4px 4px 0 !important;
-    padding: 32px !important;
-    margin: 16px 0 !important;
-}
-
-div[data-testid="stVerticalBlockBorderWrapper"] h1,
-div[data-testid="stVerticalBlockBorderWrapper"] h2,
-div[data-testid="stVerticalBlockBorderWrapper"] h3 {
-    font-family: var(--font-heading);
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
-}
-
-div[data-testid="stVerticalBlockBorderWrapper"] h1 { font-size: 26px; }
-div[data-testid="stVerticalBlockBorderWrapper"] h2 { font-size: 22px; }
-div[data-testid="stVerticalBlockBorderWrapper"] h3 { font-size: 17px; }
-
-div[data-testid="stVerticalBlockBorderWrapper"] p,
-div[data-testid="stVerticalBlockBorderWrapper"] li {
-    font-family: var(--font-body);
-    font-size: 15px;
-    line-height: 1.5;
-    color: var(--text-primary);
-}
-
-/* Keep any code span the LLM emits on-brand — never a dark terminal block. */
-div[data-testid="stVerticalBlockBorderWrapper"] code,
-div[data-testid="stVerticalBlockBorderWrapper"] pre {
-    background: var(--bg-canvas) !important;
-    color: var(--text-primary) !important;
-    font-size: 14px !important;
-}
-
-/* ── Typography baseline ────────────────────────────────────────────── */
+/* ── Base ──────────────────────────────────────────────────────────── */
 
 body, .stApp {
-    font-family: var(--font-body);
+    font-family: var(--font-sans);
     color: var(--text-primary);
-    background: var(--bg-canvas);
+    background: var(--bg-primary);
 }
 
 code, pre {
     font-family: var(--font-mono) !important;
 }
 
-/* ── Input field styling ────────────────────────────────────────────── */
+.block-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 24px !important;
+    padding-top: 0 !important;
+}
 
-div[data-testid="stTextInput"] input {
-    border: 1.5px solid var(--border-light) !important;
-    border-radius: 8px !important;
-    font-family: var(--font-body) !important;
-    font-size: 15px !important;
-    padding: 10px 16px !important;
+/* ── Header ────────────────────────────────────────────────────────── */
+
+.bmo-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 0;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    margin: 0;
+}
+
+.bmo-header img {
+    height: 32px;
+}
+
+.bmo-header-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 16px;
+    flex-shrink: 0;
+}
+
+.bmo-header-title {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: -0.01em;
+}
+
+/* ── Welcome state ─────────────────────────────────────────────────── */
+
+.welcome-container {
+    text-align: center;
+    padding: 0 24px 16px;
+}
+
+.welcome-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+/* Vertically center welcome content in the viewport */
+div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:has(.welcome-container) {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 140px);
+}
+
+div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"] > div:has(.welcome-container) {
+    margin-top: auto !important;
+}
+
+div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:has(.welcome-container) > div:last-child {
+    margin-bottom: auto !important;
+}
+
+.welcome-container h2 {
+    font-family: var(--font-sans);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    margin: 0 0 6px 0;
+    line-height: 1.3;
+}
+
+.welcome-container p {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ── Chat messages ─────────────────────────────────────────────────── */
+
+div[data-testid="stChatMessage"] {
+    max-width: 760px;
+    padding: 16px 0 !important;
+    background: transparent !important;
+    border: none !important;
+    font-family: var(--font-sans) !important;
+    gap: 14px !important;
+}
+
+div[data-testid="stChatMessage"] p,
+div[data-testid="stChatMessage"] li {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--text-primary);
+}
+
+div[data-testid="stChatMessage"] h1,
+div[data-testid="stChatMessage"] h2,
+div[data-testid="stChatMessage"] h3 {
+    font-family: var(--font-sans);
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    margin-top: 20px;
+}
+
+div[data-testid="stChatMessage"] h1 { font-size: 22px; font-weight: 600; }
+div[data-testid="stChatMessage"] h2 { font-size: 18px; font-weight: 600; }
+div[data-testid="stChatMessage"] h3 { font-size: 16px; font-weight: 600; }
+
+div[data-testid="stChatMessage"] code,
+div[data-testid="stChatMessage"] pre {
+    font-family: var(--font-mono) !important;
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    font-size: 13px !important;
+    border-radius: 6px !important;
+}
+
+div[data-testid="stChatMessage"] strong {
+    font-weight: 600;
+}
+
+/* Chat message avatars */
+div[data-testid="stChatMessage"] [data-testid*="avatar"],
+div[data-testid="stChatMessage"] [data-testid*="Avatar"] {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 16px !important;
+}
+
+/* ── Suggestion chips ──────────────────────────────────────────────── */
+
+div[data-testid="stHorizontalBlock"] {
+    margin-bottom: 6px !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button {
+    background: var(--bg-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-md) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 13.5px !important;
+    font-weight: 400 !important;
+    padding: 14px 18px !important;
+    text-align: left !important;
+    line-height: 1.45 !important;
+    height: auto !important;
+    min-height: 52px !important;
+    white-space: normal !important;
+    cursor: pointer !important;
+    transition: all var(--transition) !important;
+    box-shadow: var(--shadow-xs) !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button:hover {
+    border-color: var(--accent) !important;
+    color: var(--accent) !important;
+    box-shadow: var(--shadow-sm) !important;
+    transform: translateY(-1px) !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button:active {
+    transform: translateY(0) !important;
+    box-shadow: var(--shadow-xs) !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button:disabled {
+    border-color: var(--border-subtle) !important;
+    color: var(--text-tertiary) !important;
+    background: var(--bg-secondary) !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
     box-shadow: none !important;
-    transition: border-color 150ms ease !important;
+    transform: none !important;
 }
 
-div[data-testid="stTextInput"] input:focus {
-    border-color: var(--bmo-blue) !important;
-    box-shadow: 0 0 0 2px rgba(0, 121, 193, 0.1) !important;
+/* ── Chat input bar ────────────────────────────────────────────────── */
+
+div[data-testid="stBottom"] {
+    background: var(--bg-primary) !important;
+    border-top: 1px solid var(--border-subtle) !important;
 }
 
-/* ── Download button (Save as PDF) ─────────────────────────────────── */
+div[data-testid="stBottom"] > div {
+    max-width: 1048px !important;
+    margin: 0 auto !important;
+    padding: 0 24px !important;
+}
+
+div[data-testid="stBottomBlockContainer"] {
+    max-width: 1000px !important;
+    margin: 0 auto !important;
+}
+
+div[data-testid="stChatInput"] {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-lg) !important;
+    background: var(--bg-primary) !important;
+    box-shadow: var(--shadow-sm) !important;
+    transition: border-color var(--transition), box-shadow var(--transition) !important;
+}
+
+div[data-testid="stChatInput"]:focus-within {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 3px var(--accent-subtle), var(--shadow-sm) !important;
+}
+
+div[data-testid="stChatInput"] textarea {
+    font-family: var(--font-sans) !important;
+    font-size: 15px !important;
+    color: var(--text-primary) !important;
+}
+
+div[data-testid="stChatInput"] textarea::placeholder {
+    color: var(--text-tertiary) !important;
+}
+
+div[data-testid="stChatInput"] button {
+    background: var(--accent) !important;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+    transition: background var(--transition) !important;
+}
+
+div[data-testid="stChatInput"] button:hover {
+    background: var(--accent-hover) !important;
+}
+
+div[data-testid="stChatInput"] button svg {
+    fill: white !important;
+    stroke: white !important;
+}
+
+/* ── Investigation trace ───────────────────────────────────────────── */
+
+div[data-testid="stStatusWidget"] {
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-md) !important;
+    background: var(--bg-secondary) !important;
+    margin: 8px 0 16px !important;
+}
+
+div[data-testid="stStatusWidget"] summary {
+    font-family: var(--font-sans) !important;
+    font-size: 14px !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ── Download button ───────────────────────────────────────────────── */
 
 div[data-testid="stDownloadButton"] > button {
-    background: var(--bg-white) !important;
-    color: var(--bmo-blue) !important;
-    border: 1.5px solid var(--bmo-blue) !important;
-    border-radius: 8px !important;
-    font-family: var(--font-body) !important;
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm) !important;
+    font-family: var(--font-sans) !important;
     font-size: 13px !important;
-    font-weight: 600 !important;
-    padding: 8px 24px !important;
+    font-weight: 500 !important;
+    padding: 8px 16px !important;
     cursor: pointer !important;
-    transition: all 150ms ease !important;
+    transition: all var(--transition) !important;
     margin-top: 8px !important;
 }
 
 div[data-testid="stDownloadButton"] > button:hover {
-    background: var(--bmo-blue) !important;
-    color: var(--bg-white) !important;
-    box-shadow: 0 2px 8px rgba(0, 121, 193, 0.25) !important;
+    color: var(--accent) !important;
+    border-color: var(--accent) !important;
+    background: var(--accent-subtle) !important;
 }
 
-/* ── Misc ───────────────────────────────────────────────────────────── */
+/* ── Error alerts ──────────────────────────────────────────────────── */
 
-.stMarkdown a { text-decoration: none; }
+div[data-testid="stAlert"] {
+    border-radius: var(--radius-md) !important;
+    font-family: var(--font-sans) !important;
+    font-size: 14px !important;
+}
+
+/* ── Links ─────────────────────────────────────────────────────────── */
+
+.stMarkdown a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.stMarkdown a:hover {
+    text-decoration: underline;
+}
+
+/* ── Spinner ───────────────────────────────────────────────────────── */
 
 .stSpinner > div {
-    border-top-color: var(--bmo-blue) !important;
+    border-top-color: var(--accent) !important;
+}
+
+/* ── Misc polish ───────────────────────────────────────────────────── */
+
+div[data-testid="stChatMessage"] table {
+    font-size: 14px;
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+}
+
+div[data-testid="stChatMessage"] th,
+div[data-testid="stChatMessage"] td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    text-align: left;
+}
+
+div[data-testid="stChatMessage"] th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
 }
