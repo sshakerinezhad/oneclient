@@ -1,14 +1,14 @@
 """Deterministic demo path: pre-scripted queries for the 6 BMO demo questions.
 
 Bypasses LLM-based query generation (which can produce schema typos) and runs
-gold-standard Cypher from graph.queries directly. The synthesizer still runs
-with real data, nudged toward the correct framing.
+gold-standard Cypher directly. The synthesizer still runs with real data,
+nudged toward the correct framing. Primary queries include ecif_id so the
+Streamlit visualizer can render relationship subgraphs.
 """
 import time
 
 from agents.types import Evidence, OrchestratorState, QueryResult
 from graph.db import run_read
-from graph import queries
 
 
 DEMO_SCRIPTS: dict[str, dict] = {}
@@ -20,15 +20,23 @@ def _register(question: str, steps: list[tuple[str, str, dict]], nudge: str):
 
 # ── Q1 ────────────────────────────────────────────────────────────────────────
 
-_q1_cypher, _q1_params = queries.q1_cm_only("US West")
-
 _register(
     "Top 10 CM clients with no other relationships in US West",
     steps=[
         (
             "Find companies with only CM relationship (no CB, Wealth, or P&BB) in US West",
-            _q1_cypher,
-            _q1_params,
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness {name: 'CM'})
+WHERE c.region = $region
+  AND NOT EXISTS {
+    MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(other:LineOfBusiness)
+    WHERE other.name <> 'CM'
+  }
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue
+ORDER BY c.revenue DESC
+LIMIT 10
+""",
+            {"region": "US West"},
         ),
         (
             "Count all CM-affiliated companies in US West for context",
@@ -51,15 +59,22 @@ RETURN count(c) AS total_cm_clients
 
 # ── Q2 ────────────────────────────────────────────────────────────────────────
 
-_q2_cypher, _q2_params = queries.q2_cb_no_wealth("US Northeast")
-
 _register(
     "Top 20 CB clients without Wealth in US Northeast",
     steps=[
         (
             "Find top CB clients in US Northeast who have no Wealth relationship",
-            _q2_cypher,
-            _q2_params,
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'CB'})
+WHERE c.region = $region
+  AND NOT EXISTS {
+    MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'Wealth'})
+  }
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue
+ORDER BY c.revenue DESC
+LIMIT 25
+""",
+            {"region": "US Northeast"},
         ),
         (
             "Get CB-Wealth penetration rate in US Northeast for context",
@@ -84,15 +99,23 @@ RETURN cb_total, cb_wealth,
 
 # ── Q3 ────────────────────────────────────────────────────────────────────────
 
-_q3_cypher, _q3_params = queries.q3_penetration()
-
 _register(
     "Regions with strongest CB and Wealth penetration",
     steps=[
         (
             "Calculate CB-to-Wealth penetration rate by region",
-            _q3_cypher,
-            _q3_params,
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'CB'})
+OPTIONAL MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(w:LineOfBusiness {name: 'Wealth'})
+WITH c.region AS region, c.ecif_id AS ecif, w.name AS wealth_name
+WITH region,
+     count(ecif) AS cb_count,
+     count(wealth_name) AS cb_wealth_count
+RETURN region, cb_wealth_count, cb_count,
+       CAST(cb_wealth_count AS DOUBLE) / cb_count AS penetration_rate
+ORDER BY penetration_rate DESC
+""",
+            {},
         ),
         (
             "Get total number of companies per region for scale context",
@@ -115,16 +138,23 @@ ORDER BY company_count DESC
 
 # ── Q4 ────────────────────────────────────────────────────────────────────────
 
-_q4_cypher, _q4_params = queries.q4_midwest_industries()
-
 _register(
     "Franchisee/auto dealer/equipment CB clients without Wealth in US Midwest",
     steps=[
         (
             "Find franchisee, auto dealer, and equipment industry CB clients "
             "in US Midwest without Wealth relationships",
-            _q4_cypher,
-            _q4_params,
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'CB'})
+WHERE c.region = 'US Midwest'
+  AND c.industry IN ['franchisee', 'auto_dealer', 'equipment']
+  AND NOT EXISTS {
+    MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'Wealth'})
+  }
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.industry AS industry, c.revenue AS revenue
+ORDER BY c.revenue DESC
+""",
+            {},
         ),
         (
             "Count CB clients per industry in US Midwest for broader context",
@@ -149,16 +179,26 @@ ORDER BY client_count DESC
 
 # ── Q5 ────────────────────────────────────────────────────────────────────────
 
-_q5_cypher, _q5_params = queries.q5_bank_at_work()
-
 _register(
     "Large CB/CM clients that are bank-at-work candidates",
     steps=[
         (
             "Find large CB/CM companies (>5000 employees) where employees "
             "already hold P&BB relationships — bank-at-work signal",
-            _q5_cypher,
-            _q5_params,
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness)
+WHERE l.name IN ['CB', 'CM'] AND c.employee_count > 5000
+WITH c, collect(l.name) AS lobs
+MATCH (p:Person)-[:EMPLOYED_BY]->(c)
+WHERE EXISTS {
+  MATCH (p)-[:PERSON_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'P&BB'})
+}
+WITH c, lobs, count(p) AS pbb_employee_count
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.employee_count AS employee_count,
+       pbb_employee_count, lobs
+ORDER BY pbb_employee_count DESC
+""",
+            {},
         ),
         (
             "Get employee count and revenue details for these large clients",
@@ -166,7 +206,7 @@ _register(
 MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness)
 WHERE l.name IN ['CB', 'CM'] AND c.employee_count > 5000
 WITH c, collect(DISTINCT l.name) AS lobs
-RETURN c.name AS name, c.employee_count AS employee_count,
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.employee_count AS employee_count,
        c.revenue AS revenue, lobs
 ORDER BY c.employee_count DESC
 """,
@@ -184,16 +224,26 @@ ORDER BY c.employee_count DESC
 
 # ── Q6 ────────────────────────────────────────────────────────────────────────
 
-_q6_cypher, _q6_params = queries.q6_underpenetrated()
-
 _register(
     "Best underpenetrated opportunity with strong cross-BMO relationships",
     steps=[
         (
             "Find companies with multiple LOB relationships and strong employee "
             "connections but missing key product lines",
-            _q6_cypher,
-            _q6_params,
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness)
+WITH c, collect(DISTINCT l.name) AS lobs, count(DISTINCT l) AS lob_count
+WHERE lob_count >= 2
+OPTIONAL MATCH (p:Person)-[:EMPLOYED_BY]->(c)
+WITH c, lobs, count(p) AS employee_links
+WHERE employee_links > 10
+  AND NOT ('Wealth' IN lobs AND 'CB' IN lobs AND 'CM' IN lobs)
+RETURN c.ecif_id AS ecif_id, c.name AS name, lobs, employee_links, c.revenue AS revenue,
+       c.employee_count AS employee_count
+ORDER BY employee_links DESC, c.revenue DESC
+LIMIT 5
+""",
+            {},
         ),
         (
             "Get detailed LOB breakdown and employee links for the top "
@@ -204,7 +254,8 @@ WITH c, collect(l.name) AS current_lobs
 OPTIONAL MATCH (p:Person)-[:EMPLOYED_BY]->(c)
 WITH c, current_lobs, count(p) AS employee_links
 OPTIONAL MATCH (exec:Person)-[:EXECUTIVE_OF]->(c)
-RETURN c.name AS name, c.revenue AS revenue, c.employee_count AS employee_count,
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue,
+       c.employee_count AS employee_count,
        current_lobs, employee_links, count(exec) AS executive_count
 """,
             {},

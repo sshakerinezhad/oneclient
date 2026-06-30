@@ -177,4 +177,4 @@ def build_report(question: str, answer: str) -> bytes:
     html = _md_to_html(answer)
     pdf.write_html(html)
 
-    return pdf.output()
+    return bytes(pdf.output())
