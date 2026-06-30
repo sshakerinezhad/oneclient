@@ -3,6 +3,7 @@
 
 :root {
     --bmo-blue: #0079C1;
+    --bmo-dark-blue: #006DAD;
     --bmo-red: #ED1D24;
     --bg-white: #FFFFFF;
     --bg-canvas: #F5F7FA;
@@ -20,10 +21,10 @@
 footer {visibility: hidden;}
 header {visibility: hidden;}
 
-/* Remove Streamlit default top padding */
 .block-container {
     padding-top: 0 !important;
     max-width: 1200px;
+    margin: 0 auto;
 }
 
 /* ── BMO Header ─────────────────────────────────────────────────────── */
@@ -57,8 +58,8 @@ header {visibility: hidden;}
 .graph-canvas {
     background: var(--bg-canvas);
     border: 1px solid var(--border-light);
-    border-radius: 4px;
-    min-height: 450px;
+    border-radius: 8px;
+    min-height: 150px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -83,19 +84,19 @@ header {visibility: hidden;}
 
 /* ── Question Chips ─────────────────────────────────────────────────── */
 
-.question-section {
-    margin-bottom: 24px;
+/* Chip rows: horizontal blocks that do NOT contain a text input */
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) {
+    margin-bottom: 8px !important;
 }
 
-/* Target Streamlit's button elements inside the chip grid */
-div[data-testid="stHorizontalBlock"] .stButton > button {
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button {
     border: 1.5px solid var(--bmo-blue) !important;
-    border-radius: 4px !important;
+    border-radius: 8px !important;
     color: var(--bmo-blue) !important;
     background: var(--bg-white) !important;
     font-family: var(--font-body) !important;
     font-size: 13px !important;
-    padding: 10px 16px !important;
+    padding: 12px 16px !important;
     cursor: pointer !important;
     transition: all 150ms ease !important;
     text-align: left !important;
@@ -107,12 +108,13 @@ div[data-testid="stHorizontalBlock"] .stButton > button {
     box-shadow: none !important;
 }
 
-div[data-testid="stHorizontalBlock"] .stButton > button:hover {
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button:hover {
     background: var(--bmo-blue) !important;
     color: var(--bg-white) !important;
+    box-shadow: 0 2px 8px rgba(0, 121, 193, 0.25) !important;
 }
 
-div[data-testid="stHorizontalBlock"] .stButton > button:disabled {
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button:disabled {
     border-color: var(--border-light) !important;
     color: var(--text-secondary) !important;
     background: var(--bg-canvas) !important;
@@ -120,27 +122,38 @@ div[data-testid="stHorizontalBlock"] .stButton > button:disabled {
     opacity: 0.6 !important;
 }
 
-div[data-testid="stHorizontalBlock"] .stButton > button:disabled:hover {
+div[data-testid="stHorizontalBlock"]:not(:has(div[data-testid="stTextInput"])) .stButton > button:disabled:hover {
     background: var(--bg-canvas) !important;
     color: var(--text-secondary) !important;
+    box-shadow: none !important;
 }
 
-/* ── Ask button ─────────────────────────────────────────────────────── */
+/* ── Ask button (in the row that HAS a text input) ─────────────────── */
 
-.ask-button .stButton > button {
+div[data-testid="stHorizontalBlock"]:has(div[data-testid="stTextInput"]) {
+    margin-bottom: 16px !important;
+}
+
+div[data-testid="stHorizontalBlock"]:has(div[data-testid="stTextInput"]) .stButton > button {
     background: var(--bmo-blue) !important;
     color: var(--bg-white) !important;
     border: none !important;
-    border-radius: 4px !important;
+    border-radius: 8px !important;
     font-family: var(--font-body) !important;
     font-size: 15px !important;
+    font-weight: 600 !important;
     padding: 10px 32px !important;
+    min-height: unset !important;
+    text-align: center !important;
+    height: auto !important;
     box-shadow: none !important;
-    transition: background 150ms ease !important;
+    cursor: pointer !important;
+    transition: all 150ms ease !important;
 }
 
-.ask-button .stButton > button:hover {
-    background: #006DAD !important;
+div[data-testid="stHorizontalBlock"]:has(div[data-testid="stTextInput"]) .stButton > button:hover {
+    background: var(--bmo-dark-blue) !important;
+    box-shadow: 0 2px 8px rgba(0, 121, 193, 0.25) !important;
 }
 
 /* ── Investigation Trace (st.status override) ───────────────────────── */
@@ -159,7 +172,6 @@ div[data-testid="stStatusWidget"] summary {
 
 /* ── Answer Card (st.container with border) ─────────────────────────── */
 
-/* The last bordered container on the page is the answer card */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background: var(--bg-white) !important;
     border: none !important;
@@ -203,24 +215,23 @@ code, pre {
 
 div[data-testid="stTextInput"] input {
     border: 1.5px solid var(--border-light) !important;
-    border-radius: 4px !important;
+    border-radius: 8px !important;
     font-family: var(--font-body) !important;
     font-size: 15px !important;
     padding: 10px 16px !important;
     box-shadow: none !important;
+    transition: border-color 150ms ease !important;
 }
 
 div[data-testid="stTextInput"] input:focus {
     border-color: var(--bmo-blue) !important;
-    box-shadow: none !important;
+    box-shadow: 0 0 0 2px rgba(0, 121, 193, 0.1) !important;
 }
 
 /* ── Misc ───────────────────────────────────────────────────────────── */
 
-/* Remove Streamlit's default link decoration on header anchors */
 .stMarkdown a { text-decoration: none; }
 
-/* Spinner color override */
 .stSpinner > div {
     border-top-color: var(--bmo-blue) !important;
 }

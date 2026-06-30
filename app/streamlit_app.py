@@ -72,6 +72,7 @@ for key, default in {
     "answer": None,
     "graph_html": None,
     "investigating": False,
+    "error": None,
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -91,7 +92,53 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# ── Graph canvas (hero position) ───────────────────────────────────────────
+# ── Question chips ──────────────────────────────────────────────────────────
+
+disabled = st.session_state.investigating
+
+# Row 1
+cols_1 = st.columns(3, gap="small")
+for i, col in enumerate(cols_1):
+    with col:
+        if st.button(QUESTIONS[i], key=f"q{i}", disabled=disabled, use_container_width=True):
+            st.session_state.current_question = QUESTIONS[i]
+            st.session_state.answer = None
+            st.session_state.graph_html = None
+            st.session_state.error = None
+            st.rerun()
+
+# Row 2
+cols_2 = st.columns(3, gap="small")
+for i, col in enumerate(cols_2):
+    idx = i + 3
+    with col:
+        if st.button(QUESTIONS[idx], key=f"q{idx}", disabled=disabled, use_container_width=True):
+            st.session_state.current_question = QUESTIONS[idx]
+            st.session_state.answer = None
+            st.session_state.graph_html = None
+            st.session_state.error = None
+            st.rerun()
+
+# Free-text input
+input_col, btn_col = st.columns([5, 1], gap="small")
+with input_col:
+    custom_q = st.text_input(
+        "Ask a question",
+        placeholder="Ask a question about client relationships...",
+        label_visibility="collapsed",
+        disabled=disabled,
+    )
+with btn_col:
+    ask_clicked = st.button("Ask", disabled=disabled, use_container_width=True)
+
+if ask_clicked and custom_q.strip():
+    st.session_state.current_question = custom_q.strip()
+    st.session_state.answer = None
+    st.session_state.graph_html = None
+    st.session_state.error = None
+    st.rerun()
+
+# ── Graph canvas ───────────────────────────────────────────────────────────
 
 graph_placeholder = st.empty()
 
@@ -112,65 +159,18 @@ else:
         unsafe_allow_html=True,
     )
 
-# ── Question chips ──────────────────────────────────────────────────────────
-
-disabled = st.session_state.investigating
-
-# Row 1
-cols_1 = st.columns(3, gap="small")
-for i, col in enumerate(cols_1):
-    with col:
-        if st.button(QUESTIONS[i], key=f"q{i}", disabled=disabled, use_container_width=True):
-            st.session_state.current_question = QUESTIONS[i]
-            st.session_state.answer = None
-            st.session_state.graph_html = None
-            st.rerun()
-
-# Row 2
-cols_2 = st.columns(3, gap="small")
-for i, col in enumerate(cols_2):
-    idx = i + 3
-    with col:
-        if st.button(QUESTIONS[idx], key=f"q{idx}", disabled=disabled, use_container_width=True):
-            st.session_state.current_question = QUESTIONS[idx]
-            st.session_state.answer = None
-            st.session_state.graph_html = None
-            st.rerun()
-
-# Free-text input
-input_col, btn_col = st.columns([5, 1], gap="small")
-with input_col:
-    custom_q = st.text_input(
-        "Ask a question",
-        placeholder="Ask a question about client relationships...",
-        label_visibility="collapsed",
-        disabled=disabled,
-    )
-with btn_col:
-    st.markdown('<div class="ask-button">', unsafe_allow_html=True)
-    ask_clicked = st.button("Ask", disabled=disabled, use_container_width=True)
-    st.markdown("</div>", unsafe_allow_html=True)
-
-if ask_clicked and custom_q.strip():
-    st.session_state.current_question = custom_q.strip()
-    st.session_state.answer = None
-    st.session_state.graph_html = None
-    st.rerun()
-
 # ── Investigation run ──────────────────────────────────────────────────────
 
 if st.session_state.current_question and st.session_state.answer is None:
     question = st.session_state.current_question
     st.session_state.investigating = True
 
-    # Show loading state in graph canvas
     graph_placeholder.markdown(
         '<div class="graph-canvas"><div class="graph-loading">'
         "Investigating...</div></div>",
         unsafe_allow_html=True,
     )
 
-    # Investigation trace
     with st.status("Investigation Trace", expanded=True) as trace_status:
         thinking_placeholder = st.empty()
         trace_log = st.container()
@@ -178,7 +178,6 @@ if st.session_state.current_question and st.session_state.answer is None:
 
         def on_event(kind: str, text: str):
             if kind == "thinking":
-                # Accumulate thinking tokens (st.empty overwrites each time)
                 if "thinking_buffer" not in st.session_state:
                     st.session_state["thinking_buffer"] = []
                 st.session_state["thinking_buffer"].append(text)
@@ -201,7 +200,6 @@ if st.session_state.current_question and st.session_state.answer is None:
             st.session_state.answer = result["answer"]
             state = result["state"]
 
-            # Extract entity IDs for subgraph
             entity_ids = set()
             for ev in state.evidence:
                 for row in ev.result.rows:
@@ -211,7 +209,6 @@ if st.session_state.current_question and st.session_state.answer is None:
                         ):
                             entity_ids.add(val)
 
-            # Build graph if we have entities
             if entity_ids:
                 try:
                     html = build_subgraph(conn, list(entity_ids), cap=15)
@@ -229,14 +226,16 @@ if st.session_state.current_question and st.session_state.answer is None:
 
         except Exception as exc:
             trace_status.update(label="Investigation failed", state="error")
-            st.error(f"Error: {exc}")
+            st.session_state.error = str(exc)
 
     st.session_state.investigating = False
-    st.session_state.current_question = None  # consumed
+    st.session_state.current_question = None
     st.rerun()
 
-# ── Answer card ─────────────────────────────────────────────────────────────
+# ── Results ────────────────────────────────────────────────────────────────
 
-if st.session_state.answer:
+if st.session_state.error:
+    st.error(f"Investigation failed: {st.session_state.error}")
+elif st.session_state.answer:
     with st.container(border=True):
         st.markdown(st.session_state.answer)
