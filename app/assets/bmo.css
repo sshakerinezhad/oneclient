@@ -189,7 +189,9 @@ div[data-testid="stVerticalBlockBorderWrapper"] h3 {
     letter-spacing: -0.01em;
 }
 
+div[data-testid="stVerticalBlockBorderWrapper"] h1 { font-size: 26px; }
 div[data-testid="stVerticalBlockBorderWrapper"] h2 { font-size: 22px; }
+div[data-testid="stVerticalBlockBorderWrapper"] h3 { font-size: 17px; }
 
 div[data-testid="stVerticalBlockBorderWrapper"] p,
 div[data-testid="stVerticalBlockBorderWrapper"] li {
@@ -197,6 +199,14 @@ div[data-testid="stVerticalBlockBorderWrapper"] li {
     font-size: 15px;
     line-height: 1.5;
     color: var(--text-primary);
+}
+
+/* Keep any code span the LLM emits on-brand — never a dark terminal block. */
+div[data-testid="stVerticalBlockBorderWrapper"] code,
+div[data-testid="stVerticalBlockBorderWrapper"] pre {
+    background: var(--bg-canvas) !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
 }
 
 /* ── Typography baseline ────────────────────────────────────────────── */
