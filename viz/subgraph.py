@@ -164,11 +164,11 @@ def build_subgraph(
         is_answer = nid in id_set
         size = cfg["size_answer"] if is_answer else cfg["size"]
         name = meta["label"]
-        short = name if len(name) <= 14 else name[:13] + "…"
+        short = name if len(name) <= 10 else name[:9] + "…"
         net.add_node(
             nid,
             label=f"{cfg['emoji']}\n{short}",
-            title=meta["label"],
+            title=name,
             shape="text",
             font={"size": size, "face": "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif"},
         )
@@ -191,10 +191,9 @@ def build_subgraph(
         "physics": {
             "barnesHut": {
                 "gravitationalConstant": -5000,
-                "springLength": 200,
+                "springLength": 225,
                 "springConstant": 0.04,
-                "damping": 0.3,
-                "avoidOverlap": 1
+                "damping": 0.3
             },
             "stabilization": {"iterations": 100}
         },
