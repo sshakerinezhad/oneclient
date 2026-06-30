@@ -23,6 +23,15 @@ python -m load.load_kuzu
 
 Uses fixed seed (42) for reproducible data generation across machines.
 
+### Rebuild After Updating Files
+
+If you've copied over updated files (e.g. new fixtures or queries), regenerate data and rebuild:
+
+```bash
+python -c "import sys; sys.path.insert(0,'.'); from generate.generate_data import main; main('data/staged')"
+python -c "from load.load_kuzu import build_db; import shutil; shutil.rmtree('data/oneclient.kuzu', True); build_db('data/oneclient.kuzu', 'data/staged', 'schema/schema.cypher')"
+```
+
 ## Verify (Optional)
 
 Run 6 canonical business questions against the graph to verify data integrity:
