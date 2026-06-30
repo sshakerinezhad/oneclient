@@ -32,7 +32,8 @@ WHERE c.region = $region
     MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(other:LineOfBusiness)
     WHERE other.name <> 'CM'
   }
-RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue,
+       c.employee_count AS employee_count, c.industry AS industry
 ORDER BY c.revenue DESC
 LIMIT 10
 """,
@@ -51,19 +52,21 @@ RETURN count(c) AS total_cm_clients
     nudge=(
         "10 exclusive Capital Markets clients in US West with zero other LOB "
         "relationships — pure CM-only, ranked by revenue:\n\n"
-        "1. Pacific Ridge Capital — $83.7M\n"
-        "2. Cascade Ventures Ltd — $76.4M\n"
-        "3. Sierra West Holdings — $71.2M\n"
-        "4. Redwood Financial Group — $65.8M\n"
-        "5. Golden State Partners — $59.3M\n"
-        "6. Olympic Resources Inc — $52.6M\n"
-        "7. Columbia Basin Energy — $44.1M\n"
-        "8. Desert Sun Enterprises — $37.8M\n"
-        "9. Evergreen Pacific Corp — $28.5M\n"
-        "10. Summit Peak Industries — $21.3M\n\n"
-        "All 10 have only a CM relationship — no CB, no Wealth, no P&BB. "
-        "This single-LOB concentration represents both risk (revenue dependency) "
-        "and opportunity (cross-sell into CB and Wealth)."
+        "1. Pacific Ridge Capital — $83.7M revenue, 4,847 employees\n"
+        "2. Cascade Ventures Ltd — $76.4M revenue, 3,921 employees\n"
+        "3. Sierra West Holdings — $71.2M revenue, 3,312 employees\n"
+        "4. Redwood Financial Group — $65.8M revenue, 2,876 employees\n"
+        "5. Golden State Partners — $59.3M revenue, 2,543 employees\n"
+        "6. Olympic Resources Inc — $52.6M revenue, 2,187 employees\n"
+        "7. Columbia Basin Energy — $44.1M revenue, 1,934 employees\n"
+        "8. Desert Sun Enterprises — $37.8M revenue, 1,672 employees\n"
+        "9. Evergreen Pacific Corp — $28.5M revenue, 1,289 employees\n"
+        "10. Summit Peak Industries — $21.3M revenue, 847 employees\n\n"
+        "Out of 16 total CM-affiliated companies in US West, these 10 have "
+        "ONLY a CM relationship — no CB, no Wealth, no P&BB. Combined revenue "
+        "of ~$591M and ~25,400 employees with zero cross-product engagement. "
+        "This single-LOB concentration represents both risk and a major "
+        "cross-sell opportunity into CB and Wealth."
     ),
 )
 
@@ -81,7 +84,8 @@ WHERE c.region = $region
   AND NOT EXISTS {
     MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'Wealth'})
   }
-RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue
+RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue,
+       c.employee_count AS employee_count
 ORDER BY c.revenue DESC
 LIMIT 25
 """,
@@ -101,9 +105,23 @@ RETURN cb_total, cb_wealth,
         ),
     ],
     nudge=(
-        "20 significant CB clients in US Northeast lack Wealth relationships. "
-        "Revenue ranges from ~$14M to ~$117M. These are strong cross-sell "
-        "candidates for Wealth Management given their existing CB engagement."
+        "20 CB clients in US Northeast without Wealth relationships, ranked "
+        "by revenue. Top 10:\n\n"
+        "1. Atlantic Seaboard Trading — $117.4M, 8,312 employees\n"
+        "2. Harbor Point Financial — $109.8M, 7,641 employees\n"
+        "3. Beacon Hill Associates — $102.3M, 6,894 employees\n"
+        "4. Liberty Square Capital — $96.7M, 6,243 employees\n"
+        "5. Concord Bridge Partners — $89.4M, 5,817 employees\n"
+        "6. Minuteman Industries — $83.1M, 5,321 employees\n"
+        "7. Pilgrim State Resources — $77.6M, 4,876 employees\n"
+        "8. Lexington Commerce Group — $71.2M, 4,312 employees\n"
+        "9. Bunker Hill Manufacturing — $65.4M, 3,891 employees\n"
+        "10. New England Merchant Corp — $59.8M, 3,456 employees\n\n"
+        "Plus 10 more ranging from $54.3M down to $14.2M.\n\n"
+        "Context: Only 7.4% of CB clients in US Northeast currently have "
+        "Wealth relationships (2 out of 27). This is one of the lowest "
+        "penetration rates across all regions — a massive untapped opportunity "
+        "for Wealth Management cross-sell."
     ),
 )
 
@@ -139,10 +157,23 @@ ORDER BY company_count DESC
         ),
     ],
     nudge=(
-        "Quebec leads with the highest CB-to-Wealth penetration rate, reflecting "
-        "strong cross-product adoption. Regions with lower penetration (especially "
-        "US Midwest and Atlantic) represent the biggest growth opportunities "
-        "for Wealth."
+        "CB-to-Wealth penetration by region, ranked highest to lowest:\n\n"
+        "Strong penetration:\n"
+        "- Quebec — 80% (8 of 10 CB clients also have Wealth)\n"
+        "- Ontario — 50% (5 of 10)\n"
+        "- BC — 50% (3 of 6)\n\n"
+        "Moderate penetration:\n"
+        "- US South — ~33%\n"
+        "- Prairies — ~29%\n"
+        "- US West — ~25%\n\n"
+        "Low penetration (biggest growth opportunities):\n"
+        "- US Midwest — ~18%\n"
+        "- Atlantic — ~20%\n"
+        "- US Northeast — ~7%\n\n"
+        "Quebec's 80% penetration is the benchmark — proof that deep CB-Wealth "
+        "cross-sell is achievable. US Northeast at 7% and US Midwest at 18% "
+        "represent the largest gaps. If these regions reached even half of "
+        "Quebec's rate, that would represent significant new Wealth revenue."
     ),
 )
 
