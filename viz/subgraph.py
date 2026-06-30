@@ -192,14 +192,12 @@ def build_subgraph(
         "physics": {
             "barnesHut": {
                 "gravitationalConstant": -5000,
-                "springLength": 300,
+                "springLength": 225,
                 "springConstant": 0.04,
-                "damping": 0.5,
-                "avoidOverlap": 0.8
+                "damping": 0.3,
+                "avoidOverlap": 1.5
             },
-            "stabilization": {"iterations": 200},
-            "maxVelocity": 30,
-            "minVelocity": 0.75
+            "stabilization": {"enabled": true, "iterations": 200, "updateInterval": 25}
         },
         "interaction": {
             "hover": true,
@@ -208,5 +206,20 @@ def build_subgraph(
     }""")
 
     html = net.generate_html()
-    html = html.replace("</body>", _LEGEND_HTML + "</body>")
+    freeze_js = """<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var checkNet = setInterval(function() {
+        var net = Object.values(window).find(function(v) {
+            return v && typeof v.setOptions === "function" && v.body;
+        });
+        if (net) {
+            clearInterval(checkNet);
+            net.on("stabilizationIterationsDone", function() {
+                net.setOptions({physics: false});
+            });
+        }
+    }, 50);
+});
+</script>"""
+    html = html.replace("</body>", _LEGEND_HTML + freeze_js + "</body>")
     return html
