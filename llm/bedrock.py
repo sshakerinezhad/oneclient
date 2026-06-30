@@ -1,8 +1,9 @@
-"""BedrockClient: thin wrapper around boto3 Bedrock Converse API.
+"""BedrockClient: thin wrapper around boto3 Bedrock invoke_model API.
 
 Provides buffered (converse) and streaming (converse_stream) calls, both
 returning a uniform dict with text, tool_uses, stop_reason, and messages.
-Supports tool-use blocks and Anthropic extended thinking via additionalModelRequestFields.
+Uses Anthropic Messages API format via invoke_model (not the Converse API).
+Supports tool-use blocks and extended thinking.
 """
 import json
 import time
@@ -11,6 +12,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 MAX_RETRIES = 3
+ANTHROPIC_VERSION = "bedrock-2023-05-31"
 
 
 class BedrockClient:
@@ -37,9 +39,14 @@ class BedrockClient:
         thinking: bool = False,
         max_tokens: int = 4096,
     ) -> dict:
-        """Buffered (non-streaming) Converse call with automatic retry."""
-        kwargs = self._build_kwargs(model_id, system, messages, tools, thinking, max_tokens)
-        resp = self._call_with_retry(self._client.converse, kwargs)
+        """Buffered call via invoke_model with automatic retry."""
+        body = self._build_body(system, messages, tools, thinking, max_tokens)
+        raw = self._call_with_retry(
+            self._client.invoke_model,
+            {"modelId": model_id, "body": json.dumps(body),
+             "contentType": "application/json", "accept": "application/json"},
+        )
+        resp = json.loads(raw["body"].read())
         return self._parse_response(resp, messages)
 
     def converse_stream(
@@ -52,34 +59,40 @@ class BedrockClient:
         max_tokens: int = 4096,
         on_event=None,
     ) -> dict:
-        """Streaming Converse call.
+        """Streaming call via invoke_model_with_response_stream.
 
-        Iterates the EventStream, fires on_event(kind, text) for each delta
+        Iterates the event stream, fires on_event(kind, text) for each delta
         (kinds: 'text', 'thinking', 'tool'), then returns the same shape as
         converse().  on_event=None disables callbacks but still aggregates.
         """
-        kwargs = self._build_kwargs(model_id, system, messages, tools, thinking, max_tokens)
-        raw = self._call_with_retry(self._client.converse_stream, kwargs)
-        return self._consume_stream(raw["stream"], messages, on_event)
+        body = self._build_body(system, messages, tools, thinking, max_tokens)
+        raw = self._call_with_retry(
+            self._client.invoke_model_with_response_stream,
+            {"modelId": model_id, "body": json.dumps(body),
+             "contentType": "application/json", "accept": "application/json"},
+        )
+        return self._consume_stream(raw["body"], messages, on_event)
 
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _build_kwargs(self, model_id, system, messages, tools, thinking, max_tokens):
-        kwargs = {
-            "modelId": model_id,
+    def _build_body(self, system, messages, tools, thinking, max_tokens):
+        body = {
+            "anthropic_version": ANTHROPIC_VERSION,
+            "max_tokens": max_tokens,
+            "system": system,
             "messages": messages,
-            "system": [{"text": system}],
-            "inferenceConfig": {"maxTokens": max_tokens, "temperature": 0},
+            "temperature": 0,
         }
         if tools:
-            kwargs["toolConfig"] = {"tools": tools}
+            body["tools"] = tools
         if thinking:
-            kwargs["additionalModelRequestFields"] = {
-                "thinking": {"type": "enabled", "budget_tokens": self._thinking_budget}
+            body["thinking"] = {
+                "type": "enabled",
+                "budget_tokens": self._thinking_budget,
             }
-        return kwargs
+        return body
 
     def _call_with_retry(self, fn, kwargs):
         """Call fn(**kwargs), retrying on throttling/service-unavailable errors."""
@@ -96,61 +109,67 @@ class BedrockClient:
                     raise
 
     def _parse_response(self, resp: dict, messages: list) -> dict:
-        """Parse a buffered Converse response into the standard return dict."""
-        content = resp["output"]["message"]["content"]
+        """Parse an Anthropic Messages API response into the standard return dict."""
         text_parts = []
         tool_uses = []
-        for block in content:
-            if "text" in block:
+        for block in resp.get("content", []):
+            if block.get("type") == "text":
                 text_parts.append(block["text"])
-            elif "toolUse" in block:
-                tu = block["toolUse"]
+            elif block.get("type") == "tool_use":
                 tool_uses.append({
-                    "id": tu["toolUseId"],
-                    "name": tu["name"],
-                    "input": tu["input"],
+                    "id": block["id"],
+                    "name": block["name"],
+                    "input": block["input"],
                 })
-            # reasoningContent blocks (extended thinking) are intentionally
-            # excluded from the return value; they are internal scratchpad.
+        assistant_msg = {"role": "assistant", "content": resp.get("content", [])}
         return {
             "text": "".join(text_parts),
             "tool_uses": tool_uses,
-            "stop_reason": resp["stopReason"],
-            "messages": messages + [resp["output"]["message"]],
+            "stop_reason": resp.get("stop_reason", "end_turn"),
+            "messages": messages + [assistant_msg],
         }
 
-    def _consume_stream(self, stream, messages: list, on_event) -> dict:
-        """Iterate an EventStream, aggregate content, fire callbacks."""
+    def _consume_stream(self, event_stream, messages: list, on_event) -> dict:
+        """Iterate an Anthropic streaming response, aggregate content, fire callbacks."""
         text_parts = []
         tool_uses = []
+        content_blocks = []
         stop_reason = "end_turn"
-        current_tool = None  # {"id", "name", "input_json"}
+        current_tool = None
 
-        for event in stream:
-            if "contentBlockStart" in event:
-                start = event["contentBlockStart"].get("start", {})
-                if "toolUse" in start:
-                    tu = start["toolUse"]
-                    current_tool = {"id": tu["toolUseId"], "name": tu["name"], "input_json": ""}
+        for event in event_stream:
+            chunk = json.loads(event["chunk"]["bytes"])
+            event_type = chunk.get("type")
+
+            if event_type == "content_block_start":
+                block = chunk.get("content_block", {})
+                if block.get("type") == "tool_use":
+                    current_tool = {
+                        "id": block["id"],
+                        "name": block["name"],
+                        "input_json": "",
+                    }
                     if on_event:
-                        on_event("tool", tu["name"])
+                        on_event("tool", block["name"])
                 else:
                     current_tool = None
 
-            elif "contentBlockDelta" in event:
-                delta = event["contentBlockDelta"].get("delta", {})
-                if "text" in delta:
+            elif event_type == "content_block_delta":
+                delta = chunk.get("delta", {})
+                delta_type = delta.get("type")
+
+                if delta_type == "text_delta":
                     text_parts.append(delta["text"])
                     if on_event:
                         on_event("text", delta["text"])
-                elif "toolUse" in delta and current_tool is not None:
-                    current_tool["input_json"] += delta["toolUse"].get("input", "")
-                elif "reasoningContent" in delta:
-                    rc_text = delta["reasoningContent"].get("text", "")
-                    if rc_text and on_event:
-                        on_event("thinking", rc_text)
+                elif delta_type == "input_json_delta" and current_tool is not None:
+                    current_tool["input_json"] += delta.get("partial_json", "")
+                elif delta_type == "thinking_delta":
+                    thinking_text = delta.get("thinking", "")
+                    if thinking_text and on_event:
+                        on_event("thinking", thinking_text)
 
-            elif "contentBlockStop" in event:
+            elif event_type == "content_block_stop":
                 if current_tool is not None:
                     try:
                         parsed_input = json.loads(current_tool["input_json"]) if current_tool["input_json"] else {}
@@ -161,23 +180,22 @@ class BedrockClient:
                         "name": current_tool["name"],
                         "input": parsed_input,
                     })
+                    content_blocks.append({
+                        "type": "tool_use",
+                        "id": current_tool["id"],
+                        "name": current_tool["name"],
+                        "input": parsed_input,
+                    })
                     current_tool = None
 
-            elif "messageStop" in event:
-                stop_reason = event["messageStop"].get("stopReason", "end_turn")
+            elif event_type == "message_delta":
+                delta = chunk.get("delta", {})
+                if "stop_reason" in delta:
+                    stop_reason = delta["stop_reason"]
 
         combined_text = "".join(text_parts)
-
-        # Reconstruct assistant message for the multi-turn messages list
-        content_blocks = []
         if combined_text:
-            content_blocks.append({"text": combined_text})
-        for tu in tool_uses:
-            content_blocks.append({"toolUse": {
-                "toolUseId": tu["id"],
-                "name": tu["name"],
-                "input": tu["input"],
-            }})
+            content_blocks.insert(0, {"type": "text", "text": combined_text})
 
         return {
             "text": combined_text,
