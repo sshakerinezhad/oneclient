@@ -86,15 +86,17 @@ class BedrockClient:
             "max_tokens": max_tokens,
             "system": system,
             "messages": messages,
-            "temperature": 0,
         }
         if tools:
             body["tools"] = tools
         if thinking:
+            body["temperature"] = 1
             body["thinking"] = {
                 "type": "enabled",
                 "budget_tokens": self._thinking_budget,
             }
+        else:
+            body["temperature"] = 0
         return body
 
     def _call_with_retry(self, fn, kwargs):
@@ -135,9 +137,11 @@ class BedrockClient:
     def _consume_stream(self, event_stream, messages: list, on_event) -> dict:
         """Iterate an Anthropic streaming response, aggregate content, fire callbacks."""
         text_parts = []
+        thinking_parts = []
         tool_uses = []
         content_blocks = []
         stop_reason = "end_turn"
+        current_block_type = None
         current_tool = None
 
         for event in event_stream:
@@ -146,7 +150,8 @@ class BedrockClient:
 
             if event_type == "content_block_start":
                 block = chunk.get("content_block", {})
-                if block.get("type") == "tool_use":
+                current_block_type = block.get("type")
+                if current_block_type == "tool_use":
                     current_tool = {
                         "id": block["id"],
                         "name": block["name"],
@@ -154,8 +159,8 @@ class BedrockClient:
                     }
                     if on_event:
                         on_event("tool", block["name"])
-                else:
-                    current_tool = None
+                elif current_block_type == "thinking":
+                    thinking_parts = []
 
             elif event_type == "content_block_delta":
                 delta = chunk.get("delta", {})
@@ -169,11 +174,23 @@ class BedrockClient:
                     current_tool["input_json"] += delta.get("partial_json", "")
                 elif delta_type == "thinking_delta":
                     thinking_text = delta.get("thinking", "")
-                    if thinking_text and on_event:
-                        on_event("thinking", thinking_text)
+                    if thinking_text:
+                        thinking_parts.append(thinking_text)
+                        if on_event:
+                            on_event("thinking", thinking_text)
 
             elif event_type == "content_block_stop":
-                if current_tool is not None:
+                if current_block_type == "thinking" and thinking_parts:
+                    content_blocks.append({
+                        "type": "thinking",
+                        "thinking": "".join(thinking_parts),
+                    })
+                    thinking_parts = []
+                elif current_block_type == "text":
+                    combined = "".join(text_parts)
+                    if combined:
+                        content_blocks.append({"type": "text", "text": combined})
+                elif current_tool is not None:
                     try:
                         parsed_input = json.loads(current_tool["input_json"]) if current_tool["input_json"] else {}
                     except json.JSONDecodeError:
@@ -190,18 +207,15 @@ class BedrockClient:
                         "input": parsed_input,
                     })
                     current_tool = None
+                current_block_type = None
 
             elif event_type == "message_delta":
                 delta = chunk.get("delta", {})
                 if "stop_reason" in delta:
                     stop_reason = delta["stop_reason"]
 
-        combined_text = "".join(text_parts)
-        if combined_text:
-            content_blocks.insert(0, {"type": "text", "text": combined_text})
-
         return {
-            "text": combined_text,
+            "text": "".join(text_parts),
             "tool_uses": tool_uses,
             "stop_reason": stop_reason,
             "messages": messages + [{"role": "assistant", "content": content_blocks}],
