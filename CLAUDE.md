@@ -29,9 +29,14 @@ When I do request it:
 **40%+ context saturation is high — start conserving.** Prefer referencing earlier reads over re-reading files. `offset`/`limit` is only allowed on files already read in full (partial reads without full context lead to bad edits).
 
 ## Testing
-- Run tests: `cd functions && python -m pytest tests/ -v --tb=short`
-- `conftest.py` auto-mocks Firestore (`services.db`), Gemini, OpenAI, Groq clients and provides Flask context
-- `firebase-functions` 0.5.0 CORS decorator requires Flask app+request context — the autouse `flask_app_context` fixture handles this
+- Run tests: `python -m pytest tests/ -v --tb=short` (from project root)
+- Verification gate: `python -m pytest tests/verify_demo.py -v` (6 demo questions, no LLM)
+- Bedrock smoke: `python tests/smoke_bedrock.py` (needs valid AWS keys in config.toml)
+
+## Architecture (OneClient)
+- **Bedrock API:** invoke_model (NOT Converse — permissions issue). Anthropic Messages API format.
+- **kuzu rel tables:** Split names — `COMPANY_HAS_RELATIONSHIP` / `PERSON_HAS_RELATIONSHIP`, `COMPANY_LOCATED_IN` / `PERSON_LOCATED_IN`. kuzu v0.7.1 doesn't support multi-FROM. All Cypher must use split names.
+- **AWS creds:** Temporary session keys (`ASIA...` prefix) in config.toml. Expire hourly. Refresh before demo.
 
 ## File Conventions
 - `masterplan.md` — long-range architecture and goals
