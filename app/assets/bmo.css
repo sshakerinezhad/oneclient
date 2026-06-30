@@ -1,0 +1,226 @@
+/* BMO Wealth Management — OneClient Intelligence
+   Flat design, system fonts, BMO palette. */
+
+:root {
+    --bmo-blue: #0079C1;
+    --bmo-red: #ED1D24;
+    --bg-white: #FFFFFF;
+    --bg-canvas: #F5F7FA;
+    --text-primary: #1A1A2E;
+    --text-secondary: #5A6A7A;
+    --border-light: #E2E8F0;
+    --font-heading: "Segoe UI Semibold", "SF Pro Display", system-ui, sans-serif;
+    --font-body: "Segoe UI", "SF Pro Text", system-ui, sans-serif;
+    --font-mono: "Cascadia Code", "SF Mono", "Consolas", monospace;
+}
+
+/* ── Hide Streamlit chrome ──────────────────────────────────────────── */
+
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+/* Remove Streamlit default top padding */
+.block-container {
+    padding-top: 0 !important;
+    max-width: 1200px;
+}
+
+/* ── BMO Header ─────────────────────────────────────────────────────── */
+
+.bmo-header {
+    display: flex;
+    align-items: center;
+    padding: 16px 32px;
+    background: var(--bg-white);
+    border-bottom: 2px solid var(--bmo-blue);
+    margin: -1rem -1rem 24px -1rem;
+}
+
+.bmo-header img {
+    height: 40px;
+    margin-right: 24px;
+}
+
+.bmo-header h1 {
+    font-family: var(--font-heading);
+    font-size: 28px;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    margin: 0;
+    padding: 0;
+    line-height: 1.2;
+}
+
+/* ── Graph Canvas ───────────────────────────────────────────────────── */
+
+.graph-canvas {
+    background: var(--bg-canvas);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    min-height: 450px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.graph-empty {
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 15px;
+    text-align: center;
+    padding: 32px;
+}
+
+.graph-loading {
+    color: var(--bmo-blue);
+    font-family: var(--font-body);
+    font-size: 15px;
+    text-align: center;
+    padding: 32px;
+}
+
+/* ── Question Chips ─────────────────────────────────────────────────── */
+
+.question-section {
+    margin-bottom: 24px;
+}
+
+/* Target Streamlit's button elements inside the chip grid */
+div[data-testid="stHorizontalBlock"] .stButton > button {
+    border: 1.5px solid var(--bmo-blue) !important;
+    border-radius: 4px !important;
+    color: var(--bmo-blue) !important;
+    background: var(--bg-white) !important;
+    font-family: var(--font-body) !important;
+    font-size: 13px !important;
+    padding: 10px 16px !important;
+    cursor: pointer !important;
+    transition: all 150ms ease !important;
+    text-align: left !important;
+    width: 100% !important;
+    white-space: normal !important;
+    height: auto !important;
+    min-height: 60px !important;
+    line-height: 1.4 !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button:hover {
+    background: var(--bmo-blue) !important;
+    color: var(--bg-white) !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button:disabled {
+    border-color: var(--border-light) !important;
+    color: var(--text-secondary) !important;
+    background: var(--bg-canvas) !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+div[data-testid="stHorizontalBlock"] .stButton > button:disabled:hover {
+    background: var(--bg-canvas) !important;
+    color: var(--text-secondary) !important;
+}
+
+/* ── Ask button ─────────────────────────────────────────────────────── */
+
+.ask-button .stButton > button {
+    background: var(--bmo-blue) !important;
+    color: var(--bg-white) !important;
+    border: none !important;
+    border-radius: 4px !important;
+    font-family: var(--font-body) !important;
+    font-size: 15px !important;
+    padding: 10px 32px !important;
+    box-shadow: none !important;
+    transition: background 150ms ease !important;
+}
+
+.ask-button .stButton > button:hover {
+    background: #006DAD !important;
+}
+
+/* ── Investigation Trace (st.status override) ───────────────────────── */
+
+div[data-testid="stStatusWidget"] {
+    border-left: 3px solid var(--bmo-blue) !important;
+    border-radius: 0 4px 4px 0 !important;
+    background: var(--bg-white) !important;
+    margin: 16px 0 !important;
+}
+
+div[data-testid="stStatusWidget"] summary {
+    font-family: var(--font-body) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ── Answer Card (st.container with border) ─────────────────────────── */
+
+/* The last bordered container on the page is the answer card */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background: var(--bg-white) !important;
+    border: none !important;
+    border-left: 3px solid var(--bmo-blue) !important;
+    border-radius: 0 4px 4px 0 !important;
+    padding: 32px !important;
+    margin: 16px 0 !important;
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] h1,
+div[data-testid="stVerticalBlockBorderWrapper"] h2,
+div[data-testid="stVerticalBlockBorderWrapper"] h3 {
+    font-family: var(--font-heading);
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+}
+
+div[data-testid="stVerticalBlockBorderWrapper"] h2 { font-size: 22px; }
+
+div[data-testid="stVerticalBlockBorderWrapper"] p,
+div[data-testid="stVerticalBlockBorderWrapper"] li {
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+/* ── Typography baseline ────────────────────────────────────────────── */
+
+body, .stApp {
+    font-family: var(--font-body);
+    color: var(--text-primary);
+    background: var(--bg-canvas);
+}
+
+code, pre {
+    font-family: var(--font-mono) !important;
+}
+
+/* ── Input field styling ────────────────────────────────────────────── */
+
+div[data-testid="stTextInput"] input {
+    border: 1.5px solid var(--border-light) !important;
+    border-radius: 4px !important;
+    font-family: var(--font-body) !important;
+    font-size: 15px !important;
+    padding: 10px 16px !important;
+    box-shadow: none !important;
+}
+
+div[data-testid="stTextInput"] input:focus {
+    border-color: var(--bmo-blue) !important;
+    box-shadow: none !important;
+}
+
+/* ── Misc ───────────────────────────────────────────────────────────── */
+
+/* Remove Streamlit's default link decoration on header anchors */
+.stMarkdown a { text-decoration: none; }
+
+/* Spinner color override */
+.stSpinner > div {
+    border-top-color: var(--bmo-blue) !important;
+}
