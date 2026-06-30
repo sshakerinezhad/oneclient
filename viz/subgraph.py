@@ -195,9 +195,9 @@ def build_subgraph(
                 "springLength": 225,
                 "springConstant": 0.04,
                 "damping": 0.3,
-                "avoidOverlap": 1.5
+                "avoidOverlap": 2.5
             },
-            "stabilization": {"enabled": true, "iterations": 200, "updateInterval": 25}
+            "stabilization": {"iterations": 200}
         },
         "interaction": {
             "hover": true,
@@ -206,20 +206,9 @@ def build_subgraph(
     }""")
 
     html = net.generate_html()
-    freeze_js = """<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var checkNet = setInterval(function() {
-        var net = Object.values(window).find(function(v) {
-            return v && typeof v.setOptions === "function" && v.body;
-        });
-        if (net) {
-            clearInterval(checkNet);
-            net.on("stabilizationIterationsDone", function() {
-                net.setOptions({physics: false});
-            });
-        }
-    }, 50);
-});
-</script>"""
-    html = html.replace("</body>", _LEGEND_HTML + freeze_js + "</body>")
+    html = html.replace(
+        "drawGraph();",
+        'var net = drawGraph(); net.on("stabilizationIterationsDone", function() { net.setOptions({physics: false}); });',
+    )
+    html = html.replace("</body>", _LEGEND_HTML + "</body>")
     return html
