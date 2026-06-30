@@ -4,4 +4,5 @@ streamlit>=1.36
 pyvis>=0.3.2
 faker>=25
 numpy>=1.26
+fpdf2>=2.8
 pytest>=8

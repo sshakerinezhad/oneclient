@@ -19,6 +19,7 @@ from agents.pipeline import answer_question  # noqa: E402
 from graph.db import connect                  # noqa: E402
 from llm.bedrock import BedrockClient         # noqa: E402
 from llm.config import load_config            # noqa: E402
+from pdf.report import build_report             # noqa: E402
 from viz.subgraph import build_subgraph       # noqa: E402
 
 # ── Page config (must be first Streamlit call) ──────────────────────────────
@@ -69,6 +70,7 @@ def get_client():
 
 for key, default in {
     "current_question": None,
+    "last_question": None,
     "answer": None,
     "graph_html": None,
     "investigating": False,
@@ -163,6 +165,7 @@ else:
 
 if st.session_state.current_question and st.session_state.answer is None:
     question = st.session_state.current_question
+    st.session_state.last_question = question
     st.session_state.investigating = True
 
     graph_placeholder.markdown(
@@ -239,3 +242,13 @@ if st.session_state.error:
 elif st.session_state.answer:
     with st.container(border=True):
         st.markdown(st.session_state.answer)
+
+    question_used = st.session_state.get("last_question", "Query")
+    pdf_bytes = build_report(question_used, st.session_state.answer)
+    st.download_button(
+        "Save as PDF",
+        data=pdf_bytes,
+        file_name="oneclient_report.pdf",
+        mime="application/pdf",
+        use_container_width=False,
+    )
