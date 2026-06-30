@@ -1,0 +1,10 @@
+CREATE NODE TABLE Company(ecif_id STRING, name STRING, country STRING, region STRING, industry STRING, employee_count INT64, revenue DOUBLE, net_income DOUBLE, rwa DOUBLE, roe DOUBLE, lending_balance DOUBLE, deposit_balance DOUBLE, PRIMARY KEY(ecif_id));
+CREATE NODE TABLE Person(ecif_id STRING, name STRING, country STRING, region STRING, customer_type STRING, PRIMARY KEY(ecif_id));
+CREATE NODE TABLE Region(name STRING, country STRING, PRIMARY KEY(name));
+CREATE NODE TABLE LineOfBusiness(name STRING, PRIMARY KEY(name));
+CREATE REL TABLE COMPANY_HAS_RELATIONSHIP(FROM Company TO LineOfBusiness, revenue DOUBLE, lending DOUBLE, deposit DOUBLE);
+CREATE REL TABLE PERSON_HAS_RELATIONSHIP(FROM Person TO LineOfBusiness, revenue DOUBLE, lending DOUBLE, deposit DOUBLE);
+CREATE REL TABLE EXECUTIVE_OF(FROM Person TO Company, title STRING);
+CREATE REL TABLE EMPLOYED_BY(FROM Person TO Company);
+CREATE REL TABLE COMPANY_LOCATED_IN(FROM Company TO Region);
+CREATE REL TABLE PERSON_LOCATED_IN(FROM Person TO Region);
