@@ -158,6 +158,34 @@ ORDER BY company_count DESC
 """,
             {},
         ),
+        (
+            "Pull representative Quebec clients with both CB and Wealth (for the graph)",
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'CB'})
+WHERE c.region = 'Quebec'
+  AND EXISTS {
+    MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'Wealth'})
+  }
+RETURN c.ecif_id AS ecif_id, c.name AS name
+ORDER BY c.revenue DESC
+LIMIT 3
+""",
+            {},
+        ),
+        (
+            "Pull representative US Northeast CB-only clients (for the graph)",
+            """
+MATCH (c:Company)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'CB'})
+WHERE c.region = 'US Northeast'
+  AND NOT EXISTS {
+    MATCH (c)-[:COMPANY_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'Wealth'})
+  }
+RETURN c.ecif_id AS ecif_id, c.name AS name
+ORDER BY c.revenue DESC
+LIMIT 3
+""",
+            {},
+        ),
     ],
     nudge=(
         "Quebec has the strongest Commercial Banking to Wealth Management "

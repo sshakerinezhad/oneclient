@@ -241,7 +241,9 @@ if st.session_state.error:
     st.error(f"Investigation failed: {st.session_state.error}")
 elif st.session_state.answer:
     with st.container(border=True):
-        st.markdown(st.session_state.answer)
+        # Escape '$' so Streamlit doesn't treat dollar amounts ($117.4M) as
+        # LaTeX math, which renders oversized/scrunched. PDF uses the raw text.
+        st.markdown(st.session_state.answer.replace("$", "\\$"))
 
     question_used = st.session_state.get("last_question", "Query")
     pdf_bytes = build_report(question_used, st.session_state.answer)

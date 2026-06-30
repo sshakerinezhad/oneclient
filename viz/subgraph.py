@@ -93,12 +93,23 @@ def _fetch_edges(conn: kuzu.Connection, entity_ids: list[str]) -> list[dict]:
     return edges
 
 
+_HUB_TYPES = ("LineOfBusiness", "Region")
+
+
 def _select_nodes(
     edges: list[dict],
     entity_ids: set[str],
     cap: int,
 ) -> dict[str, dict]:
-    """Collect nodes from edges, prioritized and capped."""
+    """Collect nodes from edges, keeping connector hubs and capping spokes.
+
+    Companies/persons are "spokes"; LineOfBusiness/Region are shared "hubs"
+    that the spokes connect to. A flat priority cap used to let a large answer
+    set (e.g. 20 companies) consume every slot and evict the LOB hub — dropping
+    all company->LOB edges, since an edge only renders when both endpoints are
+    kept. We instead cap the spokes (answer entities first) and always keep the
+    hubs they connect to, so the relationship stays visible and legible.
+    """
     all_nodes: dict[str, dict] = {}
     for e in edges:
         for prefix in ("src", "dst"):
@@ -110,19 +121,27 @@ def _select_nodes(
                     "type":  e[f"{prefix}_type"],
                 }
 
-    def _priority(nid: str) -> int:
-        if nid in entity_ids:
-            return 0
-        t = all_nodes[nid]["type"]
-        if t == "LineOfBusiness":
-            return 1
-        if t == "Region":
-            return 2
-        return 3
+    hub_set = {nid for nid, m in all_nodes.items() if m["type"] in _HUB_TYPES}
+    spokes = [nid for nid in all_nodes if nid not in hub_set]
 
-    ordered = sorted(all_nodes, key=_priority)
-    kept = ordered[:cap]
-    return {nid: all_nodes[nid] for nid in kept}
+    # Answer entities first, so the most relevant spokes survive the cap.
+    spokes.sort(key=lambda nid: 0 if nid in entity_ids else 1)
+    spoke_budget = max(cap - len(hub_set), 1)
+    kept_spokes = set(spokes[:spoke_budget])
+
+    # Keep only hubs that connect to a kept spoke (no orphan hubs), within cap.
+    kept = set(kept_spokes)
+    for e in edges:
+        for hub, other in ((e["src_id"], e["dst_id"]), (e["dst_id"], e["src_id"])):
+            if (
+                len(kept) < cap
+                and hub in hub_set
+                and other in kept_spokes
+                and hub not in kept
+            ):
+                kept.add(hub)
+
+    return {nid: all_nodes[nid] for nid in all_nodes if nid in kept}
 
 
 _LEGEND_HTML = """
