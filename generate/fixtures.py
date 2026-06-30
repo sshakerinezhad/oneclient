@@ -314,7 +314,8 @@ def _q6_underpenetrated(fx: Fixtures) -> None:
     fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CB", revenue=13_200_000.0))
     fx.rel_company_lob.append(RelLob(src=c_ecif, lob="CM", revenue=9_400_000.0))
 
-    # 3 executives
+    # 3 executives — each with personal BMO relationships that strengthen
+    # the cross-sell case for Wealth at the company level.
     exec_names = ["Catherine Beaumont", "François Lapointe", "Michelle Okafor"]
     for k, (title, exec_name) in enumerate(zip(["CEO", "CFO", "COO"], exec_names), 1):
         p_ecif = f"FX6P-{k:03d}"
@@ -323,6 +324,20 @@ def _q6_underpenetrated(fx: Fixtures) -> None:
             country="CA", region="Ontario", customer_type="executive",
         ))
         fx.executive_of.append(Edge(src=p_ecif, dst=c_ecif, title=title))
+
+    # Catherine Beaumont (CEO) — personal Wealth + P&BB accounts.
+    # The CEO already banks personally with BMO Wealth — warm intro pathway.
+    fx.rel_person_lob.append(RelLob(src="FX6P-001", lob="Wealth", revenue=42_000.0))
+    fx.rel_person_lob.append(RelLob(src="FX6P-001", lob="P&BB", revenue=8_500.0))
+
+    # François Lapointe (CFO) — board member at Continental Staffing Solutions
+    # (Q5 company, FX5-001). Cross-company intelligence link. Has P&BB.
+    fx.executive_of.append(Edge(src="FX6P-002", dst="FX5-001", title="Board Member"))
+    fx.rel_person_lob.append(RelLob(src="FX6P-002", lob="P&BB", revenue=7_200.0))
+
+    # Michelle Okafor (COO) — personal CB + P&BB accounts.
+    fx.rel_person_lob.append(RelLob(src="FX6P-003", lob="CB", revenue=15_000.0))
+    fx.rel_person_lob.append(RelLob(src="FX6P-003", lob="P&BB", revenue=6_800.0))
 
     # 30 P&BB-holding employees (ids FX6P-004 through FX6P-033)
     for i in range(1, 31):

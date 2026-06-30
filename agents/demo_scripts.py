@@ -277,19 +277,31 @@ LIMIT 5
             {},
         ),
         (
-            "Get executive leadership and LOB details for Dominion Infrastructure Partners",
+            "Get executive leadership, their personal BMO relationships, "
+            "and cross-company connections for Dominion Infrastructure Partners",
+            """
+MATCH (exec:Person)-[e:EXECUTIVE_OF]->(c:Company {name: 'Dominion Infrastructure Partners'})
+OPTIONAL MATCH (exec)-[:PERSON_HAS_RELATIONSHIP]->(l:LineOfBusiness)
+WITH exec, e, c, collect(l.name) AS personal_lobs
+OPTIONAL MATCH (exec)-[e2:EXECUTIVE_OF]->(other:Company)
+WHERE other.ecif_id <> c.ecif_id
+RETURN exec.ecif_id AS ecif_id, exec.name AS executive_name, e.title AS title,
+       personal_lobs, other.name AS other_company, e2.title AS other_title
+""",
+            {},
+        ),
+        (
+            "Get P&BB employee count and company LOB breakdown for Dominion",
             """
 MATCH (c:Company {name: 'Dominion Infrastructure Partners'})-[:COMPANY_HAS_RELATIONSHIP]->(l:LineOfBusiness)
 WITH c, collect(l.name) AS current_lobs
-MATCH (exec:Person)-[e:EXECUTIVE_OF]->(c)
-WITH c, current_lobs, collect({name: exec.name, title: e.title}) AS executives
 OPTIONAL MATCH (p:Person)-[:EMPLOYED_BY]->(c)
 WHERE EXISTS {
   MATCH (p)-[:PERSON_HAS_RELATIONSHIP]->(:LineOfBusiness {name: 'P&BB'})
 }
 RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue,
        c.employee_count AS employee_count, c.region AS region,
-       current_lobs, executives, count(p) AS pbb_employee_count
+       current_lobs, count(p) AS pbb_employee_count
 """,
             {},
         ),
@@ -297,17 +309,25 @@ RETURN c.ecif_id AS ecif_id, c.name AS name, c.revenue AS revenue,
     nudge=(
         "Dominion Infrastructure Partners is the single best underpenetrated "
         "opportunity in the portfolio:\n\n"
-        "- Revenue: $183.7M | Employees: 14,847 | Region: Ontario\n"
-        "- Current LOBs: Commercial Banking (CB) + Capital Markets (CM)\n"
-        "- MISSING: Wealth Management — despite deep existing engagement\n"
-        "- Executive team: Catherine Beaumont (CEO), François Lapointe (CFO), "
-        "Michelle Okafor (COO)\n"
-        "- 30 employees already hold Personal & Business Banking (P&BB) accounts "
-        "— strong signal of individual banking engagement\n\n"
-        "The combination of multi-LOB presence (CB + CM), large workforce with "
-        "existing P&BB penetration, senior executive relationships, and the "
-        "conspicuous absence of Wealth makes this the highest-priority cross-sell "
-        "target. Recommend Wealth Management outreach starting with the C-suite."
+        "Company: $183.7M revenue | 14,847 employees | Ontario | LOBs: CB + CM\n"
+        "MISSING: Wealth Management — despite deep existing engagement\n\n"
+        "Executive team and personal BMO relationships:\n"
+        "- Catherine Beaumont (CEO) — personal Wealth + P&BB accounts with BMO. "
+        "She already banks personally with Wealth Management, making her the "
+        "ideal warm introduction pathway for the corporate relationship.\n"
+        "- François Lapointe (CFO) — personal P&BB account. Also serves as "
+        "Board Member at Continental Staffing Solutions (another major CB/CM "
+        "client with $247M revenue) — a cross-company intelligence link.\n"
+        "- Michelle Okafor (COO) — personal CB + P&BB accounts with BMO.\n\n"
+        "Additional signals:\n"
+        "- 30 employees already hold P&BB accounts — strong individual banking "
+        "engagement across the workforce\n"
+        "- All three executives have personal banking relationships with BMO\n"
+        "- CFO's board seat at Continental Staffing creates a cross-referral "
+        "opportunity between two major clients\n\n"
+        "Recommendation: Wealth Management outreach through Catherine Beaumont "
+        "(CEO) — she is already a personal Wealth client, making this a natural "
+        "warm introduction rather than a cold call."
     ),
 )
 
