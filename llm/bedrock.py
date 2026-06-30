@@ -145,6 +145,7 @@ class BedrockClient:
         stop_reason = "end_turn"
         current_block_type = None
         current_tool = None
+        current_signature = ""
 
         for event in event_stream:
             chunk = json.loads(event["chunk"]["bytes"])
@@ -154,6 +155,7 @@ class BedrockClient:
                 block = chunk.get("content_block", {})
                 current_block_type = block.get("type")
                 block_parts = []
+                current_signature = ""
                 if current_block_type == "tool_use":
                     current_tool = {
                         "id": block["id"],
@@ -180,13 +182,18 @@ class BedrockClient:
                         block_parts.append(thinking_text)
                         if on_event:
                             on_event("thinking", thinking_text)
+                elif delta_type == "signature_delta":
+                    current_signature += delta.get("signature", "")
 
             elif event_type == "content_block_stop":
-                if current_block_type == "thinking" and block_parts:
-                    content_blocks.append({
+                if current_block_type == "thinking":
+                    thinking_block = {
                         "type": "thinking",
                         "thinking": "".join(block_parts),
-                    })
+                    }
+                    if current_signature:
+                        thinking_block["signature"] = current_signature
+                    content_blocks.append(thinking_block)
                 elif current_block_type == "text":
                     combined = "".join(block_parts)
                     if combined:
