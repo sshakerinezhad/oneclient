@@ -62,45 +62,61 @@ code, pre {
 .bmo-header {
     display: flex;
     align-items: center;
-    padding: 14px 0;
-    border-bottom: 1px solid var(--border);
-    margin: 0 0 8px 0;
+    padding: 16px 0;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+    margin: 0;
 }
 
 .bmo-header img {
-    height: 28px;
-    margin-right: 14px;
+    height: 32px;
+}
+
+.bmo-header-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 16px;
+    flex-shrink: 0;
 }
 
 .bmo-header-title {
     font-family: var(--font-sans);
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: -0.01em;
 }
 
 /* ── Welcome state ─────────────────────────────────────────────────── */
 
 .welcome-container {
     text-align: center;
-    padding: 72px 24px 40px;
+    padding: 0 24px 16px;
 }
 
-.welcome-icon {
-    font-size: 44px;
-    margin-bottom: 16px;
-    line-height: 1;
+/* Vertically center welcome content in the viewport */
+div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:has(.welcome-container) {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: calc(100vh - 140px);
+}
+
+div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"] > div:has(.welcome-container) {
+    margin-top: auto !important;
+}
+
+div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:has(.welcome-container) > div:last-child {
+    margin-bottom: auto !important;
 }
 
 .welcome-container h2 {
     font-family: var(--font-sans);
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.03em;
-    margin: 0 0 8px 0;
-    line-height: 1.2;
+    margin: 0 0 6px 0;
+    line-height: 1.3;
 }
 
 .welcome-container p {
@@ -166,7 +182,7 @@ div[data-testid="stChatMessage"] [data-testid*="Avatar"] {
 /* ── Suggestion chips ──────────────────────────────────────────────── */
 
 div[data-testid="stHorizontalBlock"] {
-    margin-bottom: 8px !important;
+    margin-bottom: 6px !important;
 }
 
 div[data-testid="stHorizontalBlock"] .stButton > button {

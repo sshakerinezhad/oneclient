@@ -84,7 +84,8 @@ _logo_b64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode()
 st.markdown(
     f"""
     <div class="bmo-header">
-        <img src="data:image/png;base64,{_logo_b64}" alt="BMO">
+        <img src="data:image/png;base64,{_logo_b64}" alt="BMO Wealth Management">
+        <div class="bmo-header-divider"></div>
         <span class="bmo-header-title">OneClient Intelligence</span>
     </div>
     """,
@@ -252,9 +253,8 @@ if not st.session_state.messages:
     st.markdown(
         """
         <div class="welcome-container">
-            <div class="welcome-icon">\U0001F3E6</div>
-            <h2>OneClient Intelligence</h2>
-            <p>Ask questions about client relationships across BMO business lines</p>
+            <h2>What would you like to explore?</h2>
+            <p>Discover cross-sell opportunities and client relationships across BMO business lines</p>
         </div>
         """,
         unsafe_allow_html=True,
