@@ -58,7 +58,8 @@ def run_orchestrator(
         OrchestratorState with accumulated evidence and iteration count.
     """
     system = _load_prompt(cfg)
-    model_id = cfg["bedrock"]["orchestrator_model_id"]
+    orch_model = cfg["bedrock"]["orchestrator_model_id"]
+    query_model = cfg["bedrock"].get("query_model_id", orch_model)
     max_iters = cfg.get("agent", {}).get("max_iters", 8)
     min_queries = cfg.get("agent", {}).get("min_queries", 2)
 
@@ -70,41 +71,49 @@ def run_orchestrator(
 
         if on_event:
             resp = client.converse_stream(
-                model_id, system, messages,
+                orch_model, system, messages,
                 tools=[QUERY_TOOL], thinking=True,
                 on_event=on_event,
             )
         else:
             resp = client.converse(
-                model_id, system, messages,
+                orch_model, system, messages,
                 tools=[QUERY_TOOL], thinking=True,
             )
 
         if resp["stop_reason"] == "tool_use" and resp.get("tool_uses"):
-            messages = resp["messages"]
+            tool_results = []
             for tu in resp["tool_uses"]:
                 if tu["name"] != "query_data":
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": tu["id"],
+                        "is_error": True,
+                        "content": f"Unknown tool: {tu['name']}",
+                    })
                     continue
                 request = tu["input"].get("request", "")
                 if on_event:
                     on_event("tool", f"Querying: {request}")
 
-                qr = run_query_agent(client, conn, request, model_id)
+                qr = run_query_agent(client, conn, request, query_model)
                 state.evidence.append(Evidence(request=request, result=qr))
 
-                messages = messages + [{
-                    "role": "user",
-                    "content": [{
-                        "type": "tool_result",
-                        "tool_use_id": tu["id"],
-                        "content": json.dumps({
-                            "rows": qr.rows[:20],
-                            "row_count": len(qr.rows),
-                            "cypher": qr.cypher,
-                            "error": qr.error,
-                        }),
-                    }],
-                }]
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": tu["id"],
+                    "content": json.dumps({
+                        "rows": qr.rows[:20],
+                        "row_count": len(qr.rows),
+                        "cypher": qr.cypher,
+                        "error": qr.error,
+                    }),
+                })
+
+            messages = resp["messages"] + [{
+                "role": "user",
+                "content": tool_results,
+            }]
 
         elif resp["stop_reason"] == "end_turn":
             if state.query_count < min_queries:
