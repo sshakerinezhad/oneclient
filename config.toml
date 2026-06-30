@@ -1,16 +1,16 @@
 [bedrock]
 region = "us-east-1"
 orchestrator_model_id = "us.anthropic.claude-opus-4-6-20260514-v1:0"
-query_model_id = "us.anthropic.claude-opus-4-6-20260514-v1:0"
+query_model_id = "us.anthropic.claude-sonnet-4-5-20250514-v1:0"
 aws_access_key_id = ""
 aws_secret_access_key = ""
 aws_session_token = ""
 aws_profile = ""
 
 [agent]
-max_iters = 8
+max_iters = 6
 min_queries = 2
-thinking_budget = 2048
+thinking_budget = 1024
 
 [paths]
 db_path = "data/oneclient.kuzu"
