@@ -17,14 +17,18 @@ NODES
   LineOfBusiness(name STRING PK)        // one of: CB, CM, Wealth, P&BB
 
 RELATIONSHIPS
-  HAS_RELATIONSHIP (Company->LineOfBusiness) and (Person->LineOfBusiness)
+  COMPANY_HAS_RELATIONSHIP (Company->LineOfBusiness)
+        {revenue DOUBLE, lending DOUBLE, deposit DOUBLE}
+  PERSON_HAS_RELATIONSHIP  (Person->LineOfBusiness)
         {revenue DOUBLE, lending DOUBLE, deposit DOUBLE}
   EXECUTIVE_OF (Person->Company) {title STRING}
   EMPLOYED_BY  (Person->Company)            // bank-at-work signal
-  LOCATED_IN   (Company->Region) and (Person->Region)
+  COMPANY_LOCATED_IN (Company->Region)
+  PERSON_LOCATED_IN  (Person->Region)
 
 NOTES
-  - A client "has a CB/CM/Wealth/P&BB relationship" == an outgoing HAS_RELATIONSHIP edge to that LineOfBusiness.
+  - A company "has a CB/CM/Wealth relationship" == a COMPANY_HAS_RELATIONSHIP edge to that LineOfBusiness.
+  - A person "has a P&BB/Wealth relationship" == a PERSON_HAS_RELATIONSHIP edge to that LineOfBusiness.
   - Company.industry interesting values: franchisee, auto_dealer, equipment.
   - Regions: US Midwest/Northeast/South/West; Ontario, Quebec, Prairies, BC, Atlantic.
 """

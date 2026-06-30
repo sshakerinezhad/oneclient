@@ -9,5 +9,7 @@ def test_vocab_present():
 
 def test_schema_text_mentions_core_tables():
     for tbl in ["Company", "Person", "Region", "LineOfBusiness",
-                "HAS_RELATIONSHIP", "EXECUTIVE_OF", "EMPLOYED_BY", "LOCATED_IN"]:
+                "COMPANY_HAS_RELATIONSHIP", "PERSON_HAS_RELATIONSHIP",
+                "EXECUTIVE_OF", "EMPLOYED_BY",
+                "COMPANY_LOCATED_IN", "PERSON_LOCATED_IN"]:
         assert tbl in s.SCHEMA_TEXT
