@@ -10,6 +10,9 @@ from agents.types import QueryResult
 from graph.db import run_read
 from graph.schema_doc import SCHEMA_TEXT
 
+def _log(msg: str):
+    print(f"\033[33m[query_agent]\033[0m {msg}", flush=True)
+
 _PROMPT_TEMPLATE: str | None = None
 
 
@@ -54,25 +57,34 @@ def run_query_agent(
     system = _load_prompt_template().replace("{SCHEMA_TEXT}", SCHEMA_TEXT)
     messages = [{"role": "user", "content": request}]
 
-    for attempt in range(1, max_repairs + 2):  # 1 initial + max_repairs retries
+    for attempt in range(1, max_repairs + 2):
+        _log(f"attempt {attempt}: generating cypher...")
         resp = client.converse(model_id, system, messages)
         cypher = _extract_cypher(resp["text"])
 
         if cypher is None:
+            _log("no cypher found in LLM response")
             return QueryResult(
                 cypher="", rows=[], error="No Cypher found in response", attempts=attempt,
             )
 
+        _log(f"cypher: {cypher}")
+
         try:
             rows = run_read(conn, cypher)
+            _log(f"success: {len(rows)} rows returned")
+            if rows:
+                _log(f"sample: {rows[0]}")
             return QueryResult(cypher=cypher, rows=rows[:50], error=None, attempts=attempt)
         except Exception as exc:
             error_msg = str(exc)
+            _log(f"query error: {error_msg}")
             if attempt > max_repairs:
+                _log("max repairs exhausted")
                 return QueryResult(
                     cypher=cypher, rows=[], error=error_msg, attempts=attempt,
                 )
-            # Feed error back for self-repair
+            _log("self-repairing...")
             messages = resp["messages"]
             messages.append({
                 "role": "user",

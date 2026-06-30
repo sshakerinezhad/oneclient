@@ -5,10 +5,14 @@ dispatched to the query agent. Enforces min_queries (anti-lazy) and max_iters
 (runaway prevention) before returning an OrchestratorState with all evidence.
 """
 import json
+import time
 from pathlib import Path
 
 from agents.query_agent import run_query_agent
 from agents.types import Evidence, OrchestratorState
+
+def _log(msg: str):
+    print(f"\033[36m[orchestrator]\033[0m {msg}", flush=True)
 
 QUERY_TOOL = {
     "name": "query_data",
@@ -66,8 +70,14 @@ def run_orchestrator(
     state = OrchestratorState(question=question)
     messages = [{"role": "user", "content": question}]
 
+    _log(f"question: {question}")
+    _log(f"config: max_iters={max_iters}, min_queries={min_queries}")
+    t_start = time.time()
+
     for _ in range(max_iters):
         state.iterations += 1
+        _log(f"--- iteration {state.iterations} ---")
+        t_iter = time.time()
 
         if on_event:
             resp = client.converse_stream(
@@ -81,10 +91,14 @@ def run_orchestrator(
                 tools=[QUERY_TOOL], thinking=True,
             )
 
+        _log(f"LLM responded in {time.time() - t_iter:.1f}s, stop_reason={resp['stop_reason']}")
+
         if resp["stop_reason"] == "tool_use" and resp.get("tool_uses"):
+            _log(f"tool calls: {len(resp['tool_uses'])}")
             tool_results = []
             for tu in resp["tool_uses"]:
                 if tu["name"] != "query_data":
+                    _log(f"  unknown tool: {tu['name']}")
                     tool_results.append({
                         "type": "tool_result",
                         "tool_use_id": tu["id"],
@@ -93,11 +107,18 @@ def run_orchestrator(
                     })
                     continue
                 request = tu["input"].get("request", "")
+                _log(f"  query_data: {request}")
                 if on_event:
                     on_event("tool", f"Querying: {request}")
 
+                t_query = time.time()
                 qr = run_query_agent(client, conn, request, query_model)
                 state.evidence.append(Evidence(request=request, result=qr))
+
+                if qr.error:
+                    _log(f"  -> ERROR ({time.time() - t_query:.1f}s): {qr.error}")
+                else:
+                    _log(f"  -> {len(qr.rows)} rows ({time.time() - t_query:.1f}s, {qr.attempts} attempt{'s' if qr.attempts != 1 else ''})")
 
                 tool_results.append({
                     "type": "tool_result",
@@ -117,7 +138,7 @@ def run_orchestrator(
 
         elif resp["stop_reason"] == "end_turn":
             if state.query_count < min_queries:
-                # Anti-lazy: force another investigation round
+                _log(f"anti-lazy: {state.query_count}/{min_queries} queries, forcing another round")
                 messages = resp["messages"] + [{
                     "role": "user",
                     "content": (
@@ -127,10 +148,12 @@ def run_orchestrator(
                     ),
                 }]
                 continue
+            _log(f"done: {state.query_count} queries in {state.iterations} iterations")
             break
 
         else:
-            # max_tokens or unrecognised stop reason — exit cleanly
+            _log(f"exiting: stop_reason={resp['stop_reason']}")
             break
 
+    _log(f"total time: {time.time() - t_start:.1f}s")
     return state
