@@ -26,7 +26,7 @@ def main(staged_dir: str = "data/staged") -> None:
     _write_rel_company_located_in(out, fx)
     _write_rel_person_located_in(out, fx)
 
-    print(f"Generated {len(fx.companies)} companies, {len(fx.persons)} persons → {out}")
+    print(f"Generated {len(fx.companies)} companies, {len(fx.persons)} persons -> {out}")
 
 
 # ---------------------------------------------------------------------------
