@@ -192,12 +192,14 @@ def build_subgraph(
         "physics": {
             "barnesHut": {
                 "gravitationalConstant": -5000,
-                "springLength": 225,
+                "springLength": 300,
                 "springConstant": 0.04,
-                "damping": 0.3,
-                "avoidOverlap": 1
+                "damping": 0.5,
+                "avoidOverlap": 0.8
             },
-            "stabilization": {"iterations": 100}
+            "stabilization": {"iterations": 200},
+            "maxVelocity": 30,
+            "minVelocity": 0.75
         },
         "interaction": {
             "hover": true,
