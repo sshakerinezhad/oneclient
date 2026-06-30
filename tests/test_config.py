@@ -34,7 +34,7 @@ query_model_id = "anthropic.claude-3-sonnet"
 
 
 def test_load_config_default_path():
-    """Test that load_config raises FileNotFoundError for missing default config.toml."""
-    with pytest.raises(FileNotFoundError) as exc_info:
-        load_config()  # Uses default "config.toml"
-    assert "config.toml missing" in str(exc_info.value)
+    """Test that load_config loads config.toml from default path when it exists."""
+    config = load_config()
+    assert "bedrock" in config
+    assert "region" in config["bedrock"]

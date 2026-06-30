@@ -19,7 +19,10 @@ class BedrockClient:
     def __init__(self, cfg: dict):
         bedrock_cfg = cfg["bedrock"]
         sess = boto3.Session(
-            profile_name=bedrock_cfg.get("aws_profile") or None
+            aws_access_key_id=bedrock_cfg.get("aws_access_key_id") or None,
+            aws_secret_access_key=bedrock_cfg.get("aws_secret_access_key") or None,
+            aws_session_token=bedrock_cfg.get("aws_session_token") or None,
+            profile_name=bedrock_cfg.get("aws_profile") or None,
         )
         self._client = sess.client(
             "bedrock-runtime", region_name=bedrock_cfg["region"]

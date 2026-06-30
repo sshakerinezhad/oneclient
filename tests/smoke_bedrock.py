@@ -7,8 +7,14 @@ from llm.config import load_config
 
 def main():
     cfg = load_config()
-    sess = boto3.Session(profile_name=cfg["bedrock"]["aws_profile"] or None)
-    client = sess.client("bedrock-runtime", region_name=cfg["bedrock"]["region"])
+    bcfg = cfg["bedrock"]
+    sess = boto3.Session(
+        aws_access_key_id=bcfg.get("aws_access_key_id") or None,
+        aws_secret_access_key=bcfg.get("aws_secret_access_key") or None,
+        aws_session_token=bcfg.get("aws_session_token") or None,
+        profile_name=bcfg.get("aws_profile") or None,
+    )
+    client = sess.client("bedrock-runtime", region_name=bcfg["region"])
     body = json.dumps({
         "anthropic_version": "bedrock-2023-05-31",
         "max_tokens": 16,
