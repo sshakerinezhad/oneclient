@@ -228,6 +228,28 @@ div[data-testid="stTextInput"] input:focus {
     box-shadow: 0 0 0 2px rgba(0, 121, 193, 0.1) !important;
 }
 
+/* ── Download button (Save as PDF) ─────────────────────────────────── */
+
+div[data-testid="stDownloadButton"] > button {
+    background: var(--bg-white) !important;
+    color: var(--bmo-blue) !important;
+    border: 1.5px solid var(--bmo-blue) !important;
+    border-radius: 8px !important;
+    font-family: var(--font-body) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    padding: 8px 24px !important;
+    cursor: pointer !important;
+    transition: all 150ms ease !important;
+    margin-top: 8px !important;
+}
+
+div[data-testid="stDownloadButton"] > button:hover {
+    background: var(--bmo-blue) !important;
+    color: var(--bg-white) !important;
+    box-shadow: 0 2px 8px rgba(0, 121, 193, 0.25) !important;
+}
+
 /* ── Misc ───────────────────────────────────────────────────────────── */
 
 .stMarkdown a { text-decoration: none; }
