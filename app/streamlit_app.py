@@ -253,6 +253,7 @@ if not st.session_state.messages:
     st.markdown(
         """
         <div class="welcome-container">
+            <div class="welcome-icon">\U0001F3E6</div>
             <h2>What would you like to explore?</h2>
             <p>Discover cross-sell opportunities and client relationships across BMO business lines</p>
         </div>

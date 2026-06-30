@@ -51,7 +51,7 @@ code, pre {
 }
 
 .block-container {
-    max-width: 760px;
+    max-width: 1000px;
     margin: 0 auto;
     padding: 0 24px !important;
     padding-top: 0 !important;
@@ -94,6 +94,12 @@ code, pre {
     padding: 0 24px 16px;
 }
 
+.welcome-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
 /* Vertically center welcome content in the viewport */
 div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:has(.welcome-container) {
     display: flex !important;
@@ -130,6 +136,7 @@ div[data-testid="stMainBlockContainer"] > div[data-testid="stVerticalBlock"]:has
 /* ── Chat messages ─────────────────────────────────────────────────── */
 
 div[data-testid="stChatMessage"] {
+    max-width: 760px;
     padding: 16px 0 !important;
     background: transparent !important;
     border: none !important;
@@ -234,13 +241,13 @@ div[data-testid="stBottom"] {
 }
 
 div[data-testid="stBottom"] > div {
-    max-width: 808px !important;
+    max-width: 1048px !important;
     margin: 0 auto !important;
     padding: 0 24px !important;
 }
 
 div[data-testid="stBottomBlockContainer"] {
-    max-width: 760px !important;
+    max-width: 1000px !important;
     margin: 0 auto !important;
 }
 
