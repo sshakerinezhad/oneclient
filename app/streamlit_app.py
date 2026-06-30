@@ -1,7 +1,8 @@
 """OneClient Intelligence — BMO Wealth Management demo UI.
 
-Single-page Streamlit app: 6 preset questions + free-text, streams the
-orchestrator's reasoning live, renders pyvis graph and answer card.
+Chat-style interface: suggestion chips + free-text input, streams the
+orchestrator's reasoning live inside chat messages, renders pyvis graph
+and answer inline.
 """
 import base64
 import sys
@@ -10,7 +11,6 @@ from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Ensure project root is importable
 _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
@@ -19,24 +19,27 @@ from agents.pipeline import answer_question  # noqa: E402
 from graph.db import connect                  # noqa: E402
 from llm.bedrock import BedrockClient         # noqa: E402
 from llm.config import load_config            # noqa: E402
-from pdf.report import build_report             # noqa: E402
+from pdf.report import build_report           # noqa: E402
 from viz.subgraph import build_subgraph       # noqa: E402
 
-# ── Page config (must be first Streamlit call) ──────────────────────────────
+# ── Page config ────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="OneClient Intelligence — BMO Wealth Management",
+    page_title="OneClient Intelligence",
     page_icon="\U0001F3E6",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# ── Load CSS ────────────────────────────────────────────────────────────────
+# ── Load CSS ───────────────────────────────────────────────────────────
 
 _CSS_PATH = Path(__file__).parent / "assets" / "bmo.css"
-st.markdown(f"<style>{_CSS_PATH.read_text(encoding='utf-8')}</style>", unsafe_allow_html=True)
+st.markdown(
+    f"<style>{_CSS_PATH.read_text(encoding='utf-8')}</style>",
+    unsafe_allow_html=True,
+)
 
-# ── Constants ───────────────────────────────────────────────────────────────
+# ── Constants ──────────────────────────────────────────────────────────
 
 QUESTIONS = [
     "Top 10 CM clients with no other relationships in US West",
@@ -47,7 +50,7 @@ QUESTIONS = [
     "Best underpenetrated opportunity with strong cross-BMO relationships",
 ]
 
-# ── Cached resources ───────────────────────────────────────────────────────
+# ── Cached resources ──────────────────────────────────────────────────
 
 @st.cache_resource
 def get_config():
@@ -66,20 +69,14 @@ def get_client():
     return BedrockClient(cfg)
 
 
-# ── Session state defaults ─────────────────────────────────────────────────
+# ── Session state ─────────────────────────────────────────────────────
 
-for key, default in {
-    "current_question": None,
-    "last_question": None,
-    "answer": None,
-    "graph_html": None,
-    "investigating": False,
-    "error": None,
-}.items():
-    if key not in st.session_state:
-        st.session_state[key] = default
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+if "processing" not in st.session_state:
+    st.session_state.processing = False
 
-# ── Header ──────────────────────────────────────────────────────────────────
+# ── Header ─────────────────────────────────────────────────────────────
 
 _LOGO_PATH = Path(__file__).parent / "assets" / "bmo_wm_logo.png"
 _logo_b64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode()
@@ -88,169 +85,195 @@ st.markdown(
     f"""
     <div class="bmo-header">
         <img src="data:image/png;base64,{_logo_b64}" alt="BMO">
-        <h1>OneClient Intelligence</h1>
+        <span class="bmo-header-title">OneClient Intelligence</span>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# ── Question chips ──────────────────────────────────────────────────────────
+# ── Helpers ────────────────────────────────────────────────────────────
 
-disabled = st.session_state.investigating
 
-# Row 1
-cols_1 = st.columns(3, gap="small")
-for i, col in enumerate(cols_1):
-    with col:
-        if st.button(QUESTIONS[i], key=f"q{i}", disabled=disabled, use_container_width=True):
-            st.session_state.current_question = QUESTIONS[i]
-            st.session_state.answer = None
-            st.session_state.graph_html = None
-            st.session_state.error = None
-            st.rerun()
+def _extract_entity_ids(state):
+    ids = set()
+    for ev in state.evidence:
+        for row in ev.result.rows:
+            for val in row.values():
+                if isinstance(val, str) and (
+                    val.startswith("FX") or val.startswith("BG")
+                ):
+                    ids.add(val)
+    return ids
 
-# Row 2
-cols_2 = st.columns(3, gap="small")
-for i, col in enumerate(cols_2):
-    idx = i + 3
-    with col:
-        if st.button(QUESTIONS[idx], key=f"q{idx}", disabled=disabled, use_container_width=True):
-            st.session_state.current_question = QUESTIONS[idx]
-            st.session_state.answer = None
-            st.session_state.graph_html = None
-            st.session_state.error = None
-            st.rerun()
 
-# Free-text input
-input_col, btn_col = st.columns([5, 1], gap="small")
-with input_col:
-    custom_q = st.text_input(
-        "Ask a question",
-        placeholder="Ask a question about client relationships...",
-        label_visibility="collapsed",
-        disabled=disabled,
-    )
-with btn_col:
-    ask_clicked = st.button("Ask", disabled=disabled, use_container_width=True)
-
-if ask_clicked and custom_q.strip():
-    st.session_state.current_question = custom_q.strip()
-    st.session_state.answer = None
-    st.session_state.graph_html = None
-    st.session_state.error = None
-    st.rerun()
-
-# ── Graph canvas ───────────────────────────────────────────────────────────
-
-graph_placeholder = st.empty()
-
-if st.session_state.graph_html:
-    graph_placeholder.empty()
-    with graph_placeholder.container():
-        components.html(st.session_state.graph_html, height=450)
-elif st.session_state.investigating:
-    graph_placeholder.markdown(
-        '<div class="graph-canvas"><div class="graph-loading">'
-        "Investigating...</div></div>",
-        unsafe_allow_html=True,
-    )
-else:
-    graph_placeholder.markdown(
-        '<div class="graph-canvas"><div class="graph-empty">'
-        "Select a question to explore client relationships</div></div>",
-        unsafe_allow_html=True,
-    )
-
-# ── Investigation run ──────────────────────────────────────────────────────
-
-if st.session_state.current_question and st.session_state.answer is None:
-    question = st.session_state.current_question
-    st.session_state.last_question = question
-    st.session_state.investigating = True
-
-    graph_placeholder.markdown(
-        '<div class="graph-canvas"><div class="graph-loading">'
-        "Investigating...</div></div>",
-        unsafe_allow_html=True,
-    )
-
-    with st.status("Investigation Trace", expanded=True) as trace_status:
-        thinking_placeholder = st.empty()
-        trace_log = st.container()
-        query_count = [0]
-
-        def on_event(kind: str, text: str):
-            if kind == "thinking":
-                if "thinking_buffer" not in st.session_state:
-                    st.session_state["thinking_buffer"] = []
-                st.session_state["thinking_buffer"].append(text)
-                thinking_placeholder.markdown(
-                    "*" + "".join(st.session_state["thinking_buffer"]) + "*"
+def _render_suggestions(key_prefix):
+    """Render the 6 suggestion chips in a 2x3 grid."""
+    disabled = st.session_state.processing
+    row1 = st.columns(3, gap="small")
+    for i, col in enumerate(row1):
+        with col:
+            if st.button(
+                QUESTIONS[i],
+                key=f"{key_prefix}_q{i}",
+                disabled=disabled,
+                use_container_width=True,
+            ):
+                st.session_state.messages.append(
+                    {"role": "user", "content": QUESTIONS[i]}
                 )
-            elif kind == "tool":
-                query_count[0] += 1
-                trace_log.markdown(f"**{text}**")
+                st.session_state.processing = True
+                st.rerun()
 
-        try:
-            cfg = get_config()
-            conn = get_connection()
-            client = get_client()
+    row2 = st.columns(3, gap="small")
+    for i, col in enumerate(row2):
+        idx = i + 3
+        with col:
+            if st.button(
+                QUESTIONS[idx],
+                key=f"{key_prefix}_q{idx}",
+                disabled=disabled,
+                use_container_width=True,
+            ):
+                st.session_state.messages.append(
+                    {"role": "user", "content": QUESTIONS[idx]}
+                )
+                st.session_state.processing = True
+                st.rerun()
 
-            st.session_state["thinking_buffer"] = []
-            result = answer_question(question, cfg, conn, client, on_event=on_event)
-            st.session_state.pop("thinking_buffer", None)
 
-            st.session_state.answer = result["answer"]
-            state = result["state"]
+def _run_pipeline():
+    """Execute the investigation pipeline, streaming results into a chat bubble."""
+    question = st.session_state.messages[-1]["content"]
 
-            entity_ids = set()
-            for ev in state.evidence:
-                for row in ev.result.rows:
-                    for val in row.values():
-                        if isinstance(val, str) and (
-                            val.startswith("FX") or val.startswith("BG")
-                        ):
-                            entity_ids.add(val)
+    with st.chat_message("assistant"):
+        with st.status("Investigating…", expanded=True) as trace:
+            thinking_ph = st.empty()
+            trace_log = st.container()
+            query_count = [0]
+            thinking_buf = []
 
-            if entity_ids:
-                try:
-                    html = build_subgraph(conn, list(entity_ids), cap=15)
-                    st.session_state.graph_html = html
-                except Exception:
-                    st.session_state.graph_html = None
-            else:
-                st.session_state.graph_html = None
+            def on_event(kind, text):
+                if kind == "thinking":
+                    thinking_buf.append(text)
+                    thinking_ph.markdown(
+                        "*" + "".join(thinking_buf) + "*"
+                    )
+                elif kind == "tool":
+                    query_count[0] += 1
+                    trace_log.markdown(f"**{text}**")
 
-            trace_status.update(
-                label=f"Investigation complete -- {query_count[0]} queries",
-                state="complete",
-                expanded=False,
-            )
+            try:
+                cfg = get_config()
+                conn = get_connection()
+                client = get_client()
 
-        except Exception as exc:
-            trace_status.update(label="Investigation failed", state="error")
-            st.session_state.error = str(exc)
+                result = answer_question(
+                    question, cfg, conn, client, on_event=on_event
+                )
+                answer = result["answer"]
+                state = result["state"]
 
-    st.session_state.investigating = False
-    st.session_state.current_question = None
+                entity_ids = _extract_entity_ids(state)
+                graph_html = None
+                if entity_ids:
+                    try:
+                        graph_html = build_subgraph(
+                            conn, list(entity_ids), cap=15
+                        )
+                    except Exception:
+                        pass
+
+                pdf_bytes = build_report(question, answer)
+
+                trace.update(
+                    label=f"Investigation complete — {query_count[0]} queries",
+                    state="complete",
+                    expanded=False,
+                )
+
+                st.markdown(answer.replace("$", "\\$"))
+
+                if graph_html:
+                    components.html(graph_html, height=420)
+
+                st.download_button(
+                    "Export PDF",
+                    data=pdf_bytes,
+                    file_name="oneclient_report.pdf",
+                    mime="application/pdf",
+                    key="pdf_live",
+                )
+
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": answer,
+                    "graph_html": graph_html,
+                    "pdf_bytes": pdf_bytes,
+                    "question": question,
+                })
+
+            except Exception as exc:
+                trace.update(label="Investigation failed", state="error")
+                st.error(f"Investigation failed: {exc}")
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": str(exc),
+                    "is_error": True,
+                })
+
+    st.session_state.processing = False
     st.rerun()
 
-# ── Results ────────────────────────────────────────────────────────────────
 
-if st.session_state.error:
-    st.error(f"Investigation failed: {st.session_state.error}")
-elif st.session_state.answer:
-    with st.container(border=True):
-        # Escape '$' so Streamlit doesn't treat dollar amounts ($117.4M) as
-        # LaTeX math, which renders oversized/scrunched. PDF uses the raw text.
-        st.markdown(st.session_state.answer.replace("$", "\\$"))
+# ── Render chat history ───────────────────────────────────────────────
 
-    question_used = st.session_state.get("last_question", "Query")
-    pdf_bytes = build_report(question_used, st.session_state.answer)
-    st.download_button(
-        "Save as PDF",
-        data=pdf_bytes,
-        file_name="oneclient_report.pdf",
-        mime="application/pdf",
-        use_container_width=False,
+for idx, msg in enumerate(st.session_state.messages):
+    with st.chat_message(msg["role"]):
+        if msg["role"] == "user":
+            st.markdown(msg["content"])
+        elif msg.get("is_error"):
+            st.error(msg["content"])
+        else:
+            st.markdown(msg["content"].replace("$", "\\$"))
+            if msg.get("graph_html"):
+                components.html(msg["graph_html"], height=420)
+            if msg.get("pdf_bytes"):
+                st.download_button(
+                    "Export PDF",
+                    data=msg["pdf_bytes"],
+                    file_name="oneclient_report.pdf",
+                    mime="application/pdf",
+                    key=f"pdf_{idx}",
+                )
+
+# ── Welcome state or post-response suggestions ───────────────────────
+
+if not st.session_state.messages:
+    st.markdown(
+        """
+        <div class="welcome-container">
+            <div class="welcome-icon">\U0001F3E6</div>
+            <h2>OneClient Intelligence</h2>
+            <p>Ask questions about client relationships across BMO business lines</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
+    _render_suggestions("welcome")
+elif not st.session_state.processing:
+    _render_suggestions("suggest")
+
+# ── Chat input ────────────────────────────────────────────────────────
+
+if prompt := st.chat_input(
+    "Ask about client relationships…",
+    disabled=st.session_state.processing,
+):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.processing = True
+    st.rerun()
+
+# ── Process pending question ──────────────────────────────────────────
+
+if st.session_state.processing:
+    _run_pipeline()
