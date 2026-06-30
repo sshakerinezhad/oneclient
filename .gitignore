@@ -4,3 +4,4 @@ config.toml
 data/oneclient.kuzu/
 data/staged/*.csv
 .streamlit/
+.claude/
