@@ -91,6 +91,8 @@ class BedrockClient:
             body["tools"] = tools
         if thinking:
             body["temperature"] = 1
+            if max_tokens <= self._thinking_budget:
+                body["max_tokens"] = self._thinking_budget + max_tokens
             body["thinking"] = {
                 "type": "enabled",
                 "budget_tokens": self._thinking_budget,
@@ -136,8 +138,8 @@ class BedrockClient:
 
     def _consume_stream(self, event_stream, messages: list, on_event) -> dict:
         """Iterate an Anthropic streaming response, aggregate content, fire callbacks."""
-        text_parts = []
-        thinking_parts = []
+        all_text = []
+        block_parts = []
         tool_uses = []
         content_blocks = []
         stop_reason = "end_turn"
@@ -151,6 +153,7 @@ class BedrockClient:
             if event_type == "content_block_start":
                 block = chunk.get("content_block", {})
                 current_block_type = block.get("type")
+                block_parts = []
                 if current_block_type == "tool_use":
                     current_tool = {
                         "id": block["id"],
@@ -159,15 +162,14 @@ class BedrockClient:
                     }
                     if on_event:
                         on_event("tool", block["name"])
-                elif current_block_type == "thinking":
-                    thinking_parts = []
 
             elif event_type == "content_block_delta":
                 delta = chunk.get("delta", {})
                 delta_type = delta.get("type")
 
                 if delta_type == "text_delta":
-                    text_parts.append(delta["text"])
+                    block_parts.append(delta["text"])
+                    all_text.append(delta["text"])
                     if on_event:
                         on_event("text", delta["text"])
                 elif delta_type == "input_json_delta" and current_tool is not None:
@@ -175,19 +177,18 @@ class BedrockClient:
                 elif delta_type == "thinking_delta":
                     thinking_text = delta.get("thinking", "")
                     if thinking_text:
-                        thinking_parts.append(thinking_text)
+                        block_parts.append(thinking_text)
                         if on_event:
                             on_event("thinking", thinking_text)
 
             elif event_type == "content_block_stop":
-                if current_block_type == "thinking" and thinking_parts:
+                if current_block_type == "thinking" and block_parts:
                     content_blocks.append({
                         "type": "thinking",
-                        "thinking": "".join(thinking_parts),
+                        "thinking": "".join(block_parts),
                     })
-                    thinking_parts = []
                 elif current_block_type == "text":
-                    combined = "".join(text_parts)
+                    combined = "".join(block_parts)
                     if combined:
                         content_blocks.append({"type": "text", "text": combined})
                 elif current_tool is not None:
@@ -215,7 +216,7 @@ class BedrockClient:
                     stop_reason = delta["stop_reason"]
 
         return {
-            "text": "".join(text_parts),
+            "text": "".join(all_text),
             "tool_uses": tool_uses,
             "stop_reason": stop_reason,
             "messages": messages + [{"role": "assistant", "content": content_blocks}],
