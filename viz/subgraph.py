@@ -32,8 +32,6 @@ _EDGE_CONFIG: dict[str, dict] = {
 
 _DEFAULT_EDGE = {"color": "#999999", "hover": "connected to", "label": "Other"}
 
-_MAX_LABEL_LEN = 16
-
 
 def _node_cfg(node_type: str) -> dict:
     return _NODE_CONFIG.get(node_type, _DEFAULT_NODE)
@@ -41,12 +39,6 @@ def _node_cfg(node_type: str) -> dict:
 
 def _edge_cfg(rel: str) -> dict:
     return _EDGE_CONFIG.get(rel, _DEFAULT_EDGE)
-
-
-def _short_name(name: str) -> str:
-    if len(name) <= _MAX_LABEL_LEN:
-        return name
-    return name[:_MAX_LABEL_LEN - 1] + "…"
 
 
 # ── data collection ───────────────────────────────────────────────────────────
@@ -149,19 +141,6 @@ _LEGEND_HTML = """
 </div>
 """
 
-_STABILIZE_SCRIPT = """
-<script>
-// Disable physics after stabilization so graph stops moving
-Object.values(window).forEach(function(v) {
-    if (v && v.on && v.body) {
-        v.on("stabilizationIterationsDone", function() {
-            v.setOptions({physics: false});
-        });
-    }
-});
-</script>
-"""
-
 
 # ── public API ────────────────────────────────────────────────────────────────
 
@@ -184,10 +163,9 @@ def build_subgraph(
         cfg = _node_cfg(meta["type"])
         is_answer = nid in id_set
         size = cfg["size_answer"] if is_answer else cfg["size"]
-        short = _short_name(meta["label"])
         net.add_node(
             nid,
-            label=f"{cfg['emoji']}\n{short}",
+            label=cfg["emoji"],
             title=meta["label"],
             shape="text",
             font={"size": size, "face": "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif"},
@@ -224,5 +202,5 @@ def build_subgraph(
     }""")
 
     html = net.generate_html()
-    html = html.replace("</body>", _LEGEND_HTML + _STABILIZE_SCRIPT + "</body>")
+    html = html.replace("</body>", _LEGEND_HTML + "</body>")
     return html
