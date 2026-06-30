@@ -193,19 +193,23 @@ def build_subgraph(
             )
 
     net.set_options("""{
+        "layout": {
+            "hierarchical": {
+                "enabled": true,
+                "direction": "UD",
+                "sortMethod": "hubsize",
+                "levelSeparation": 180,
+                "nodeSpacing": 200,
+                "treeSpacing": 250
+            }
+        },
         "physics": {
-            "barnesHut": {
-                "gravitationalConstant": -8000,
-                "springLength": 250,
-                "springConstant": 0.02,
-                "damping": 0.4,
-                "avoidOverlap": 0.5
-            },
-            "stabilization": {"iterations": 150}
+            "enabled": false
         },
         "interaction": {
             "hover": true,
-            "tooltipDelay": 100
+            "tooltipDelay": 100,
+            "dragNodes": true
         }
     }""")
 
