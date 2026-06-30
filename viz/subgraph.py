@@ -170,6 +170,7 @@ def build_subgraph(
             label=f"{cfg['emoji']}\n{short}",
             title=name,
             shape="text",
+            size=size,
             font={"size": size, "face": "Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif"},
         )
 
@@ -193,7 +194,8 @@ def build_subgraph(
                 "gravitationalConstant": -5000,
                 "springLength": 225,
                 "springConstant": 0.04,
-                "damping": 0.3
+                "damping": 0.3,
+                "avoidOverlap": 1
             },
             "stabilization": {"iterations": 100}
         },
