@@ -1,5 +1,9 @@
 """Run manually: python tests/smoke_bedrock.py
 Confirms Bedrock creds + model access via invoke_model."""
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import json
 import boto3
 from llm.config import load_config
