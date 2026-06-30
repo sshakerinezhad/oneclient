@@ -50,8 +50,9 @@ RETURN count(c) AS total_cm_clients
         ),
     ],
     nudge=(
-        "10 exclusive Capital Markets clients in US West with zero other LOB "
-        "relationships — pure CM-only, ranked by revenue:\n\n"
+        "Here are the top 10 Capital Markets (CM) clients in US West that "
+        "have no other BMO relationships — they only bank with us through "
+        "Capital Markets:\n\n"
         "1. Pacific Ridge Capital — $83.7M revenue, 4,847 employees\n"
         "2. Cascade Ventures Ltd — $76.4M revenue, 3,921 employees\n"
         "3. Sierra West Holdings — $71.2M revenue, 3,312 employees\n"
@@ -62,11 +63,11 @@ RETURN count(c) AS total_cm_clients
         "8. Desert Sun Enterprises — $37.8M revenue, 1,672 employees\n"
         "9. Evergreen Pacific Corp — $28.5M revenue, 1,289 employees\n"
         "10. Summit Peak Industries — $21.3M revenue, 847 employees\n\n"
-        "Out of 16 total CM-affiliated companies in US West, these 10 have "
-        "ONLY a CM relationship — no CB, no Wealth, no P&BB. Combined revenue "
-        "of ~$591M and ~25,400 employees with zero cross-product engagement. "
-        "This single-LOB concentration represents both risk and a major "
-        "cross-sell opportunity into CB and Wealth."
+        "Out of 16 Capital Markets clients in US West, these 10 have no "
+        "Commercial Banking, no Wealth Management, and no Personal Banking "
+        "relationship with BMO. That's ~$591M in combined revenue and ~25,400 "
+        "employees we're only reaching through one product line. These are "
+        "strong candidates for Commercial Banking and Wealth Management outreach."
     ),
 )
 
@@ -105,8 +106,9 @@ RETURN cb_total, cb_wealth,
         ),
     ],
     nudge=(
-        "20 CB clients in US Northeast without Wealth relationships, ranked "
-        "by revenue. Top 10:\n\n"
+        "We found 20 Commercial Banking (CB) clients in US Northeast who "
+        "have no Wealth Management relationship with BMO. Here are the top 10 "
+        "by revenue:\n\n"
         "1. Atlantic Seaboard Trading — $117.4M, 8,312 employees\n"
         "2. Harbor Point Financial — $109.8M, 7,641 employees\n"
         "3. Beacon Hill Associates — $102.3M, 6,894 employees\n"
@@ -118,10 +120,11 @@ RETURN cb_total, cb_wealth,
         "9. Bunker Hill Manufacturing — $65.4M, 3,891 employees\n"
         "10. New England Merchant Corp — $59.8M, 3,456 employees\n\n"
         "Plus 10 more ranging from $54.3M down to $14.2M.\n\n"
-        "Context: Only 7.4% of CB clients in US Northeast currently have "
-        "Wealth relationships (2 out of 27). This is one of the lowest "
-        "penetration rates across all regions — a massive untapped opportunity "
-        "for Wealth Management cross-sell."
+        "The bigger picture: out of 27 Commercial Banking clients in US "
+        "Northeast, only 2 also have a Wealth Management relationship. "
+        "That means 25 clients are banking with us commercially but we "
+        "haven't introduced them to Wealth — the lowest conversion rate "
+        "of any region. Start with the largest clients at the top of this list."
     ),
 )
 
@@ -157,23 +160,25 @@ ORDER BY company_count DESC
         ),
     ],
     nudge=(
-        "CB-to-Wealth penetration by region, ranked highest to lowest:\n\n"
-        "Strong penetration:\n"
-        "- Quebec — 80% (8 of 10 CB clients also have Wealth)\n"
+        "Quebec has the strongest Commercial Banking to Wealth Management "
+        "cross-adoption, with 8 out of 10 CB clients (80%) also holding a "
+        "Wealth relationship. Here's the full picture by region:\n\n"
+        "Leading regions:\n"
+        "- Quebec — 80% (8 of 10 CB clients also use Wealth Management)\n"
         "- Ontario — 50% (5 of 10)\n"
         "- BC — 50% (3 of 6)\n\n"
-        "Moderate penetration:\n"
+        "Mid-range:\n"
         "- US South — ~33%\n"
         "- Prairies — ~29%\n"
         "- US West — ~25%\n\n"
-        "Low penetration (biggest growth opportunities):\n"
-        "- US Midwest — ~18%\n"
+        "Biggest growth opportunities:\n"
         "- Atlantic — ~20%\n"
-        "- US Northeast — ~7%\n\n"
-        "Quebec's 80% penetration is the benchmark — proof that deep CB-Wealth "
-        "cross-sell is achievable. US Northeast at 7% and US Midwest at 18% "
-        "represent the largest gaps. If these regions reached even half of "
-        "Quebec's rate, that would represent significant new Wealth revenue."
+        "- US Midwest — ~18%\n"
+        "- US Northeast — ~7% (only 2 of 27 CB clients have Wealth)\n\n"
+        "Quebec shows that deep cross-adoption between Commercial Banking "
+        "and Wealth is achievable. US Northeast and US Midwest are far behind "
+        "— if they reached even half of Quebec's rate, that would mean dozens "
+        "of new Wealth Management relationships from clients we already serve."
     ),
 )
 
@@ -211,8 +216,9 @@ ORDER BY client_count DESC
         ),
     ],
     nudge=(
-        "8 CB clients in US Midwest across all three target industries, none "
-        "with Wealth relationships:\n\n"
+        "We found 8 Commercial Banking clients in US Midwest in the "
+        "franchisee, auto dealer, and equipment industries — none of them "
+        "have a Wealth Management relationship with BMO:\n\n"
         "Franchisees:\n"
         "- Heartland Franchise Group — $27.8M\n"
         "- Corn Belt Franchise Corp — $18.6M\n"
@@ -224,8 +230,10 @@ ORDER BY client_count DESC
         "Equipment:\n"
         "- Great Lakes Equipment Inc — $21.3M\n"
         "- Midwest Equipment Solutions — $12.7M\n\n"
-        "All have active Commercial Banking relationships but zero Wealth "
-        "engagement — a natural cross-sell segment for Wealth Management."
+        "All 8 already bank with us commercially, so the relationship "
+        "exists — they just haven't been introduced to Wealth Management yet. "
+        "Heartland Franchise Group ($27.8M) and Prairie Auto Center ($24.1M) "
+        "are the highest-value starting points."
     ),
 )
 
